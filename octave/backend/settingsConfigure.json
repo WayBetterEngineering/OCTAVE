@@ -1,0 +1,13 @@
+{
+    "deviceName": "OCTAVE",
+    "themeSetting": "Obsidian",
+    "startUpVolume": 0.45,
+    "clockFormat24Hour": false,
+    "showClock": true,
+    "clockSize": 26,
+    "backgroundGrid": "2x2",
+    "screenWidth": 1234,
+    "screenHeight": 648,
+    "backgroundBlurRadius": 1,
+    "uiScale": 0.75
+}
