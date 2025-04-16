@@ -51,6 +51,34 @@ ApplicationWindow {
                 mediaManager.connect_settings_manager(settingsManager)
             }
         }
+        // Load custom themes
+        if (settingsManager) {
+            let customThemes = settingsManager.customThemes
+            customThemes.forEach(function(themeName) {
+                let themeJSON = settingsManager.get_custom_theme(themeName)
+                let themeObj = JSON.parse(themeJSON)
+                App.Style.addCustomTheme(themeName, themeObj)
+            })
+        }
+        
+        // Update theme list when custom themes change
+        if (settingsManager) {
+            settingsManager.customThemesChanged.connect(function() {
+                // Clear existing custom themes
+                App.Style.customThemes = {}
+                
+                // Reload custom themes
+                let customThemes = settingsManager.customThemes
+                customThemes.forEach(function(themeName) {
+                    let themeJSON = settingsManager.get_custom_theme(themeName)
+                    let themeObj = JSON.parse(themeJSON)
+                    App.Style.addCustomTheme(themeName, themeObj)
+                })
+                
+                // Force update of theme options
+                App.Style.customThemesUpdated() // Changed this line
+            })
+        }
     }
     // Window resize handlers
     onWidthChanged: {
@@ -105,7 +133,7 @@ ApplicationWindow {
             bottom: bottomBar.top
         }
         
-        initialItem: Qt.createComponent("MediaRoom.qml").createObject(stackView, {
+        initialItem: Qt.createComponent("MainMenu.qml").createObject(stackView, {
             stackView: stackView,
             mainWindow: mainWindow
         })

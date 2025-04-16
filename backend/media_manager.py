@@ -30,6 +30,7 @@ class MediaManager(QObject):
     volumeChanged = Signal(float)
     shuffleStateChanged = Signal(bool)
     
+    
     def __init__(self):
         super().__init__()
         self._player = QMediaPlayer()
@@ -342,7 +343,6 @@ class MediaManager(QObject):
             print(f"Error getting duration: {e}")
             return "0:00"
     
-
     @Slot(str, result=str)
     def get_band(self, filename):
         """Get artist name from metadata"""
@@ -482,8 +482,7 @@ class MediaManager(QObject):
                 print(f"Playback error: {e}")
         else:
             print(f"File not found: {file_path}")
-        
-
+     
     @Slot()
     def next_track(self):
         """Play next track in playlist"""

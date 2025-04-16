@@ -538,6 +538,57 @@ Rectangle {
                 anchors.centerIn: parent
                 spacing: App.Spacing.bottomBarBetweenButtonMargin * 8
                 
+                // Home Button (Main Menu)
+                Control {
+                    id: homeButton
+                    implicitWidth: App.Spacing.bottomBarNavButtonWidth
+                    implicitHeight: App.Spacing.bottomBarNavButtonHeight
+                    
+                    // Add scale and opacity animations
+                    scale: mouseAreaHome.pressed ? 0.8 : 1.0
+                    opacity: mouseAreaHome.pressed ? 0.7 : 1.0
+                    
+                    Behavior on scale {
+                        NumberAnimation {
+                            duration: 200
+                            easing.type: Easing.OutBack  
+                            easing.overshoot: 1.1
+                        }
+                    }
+                    
+                    Behavior on opacity {
+                        NumberAnimation { duration: 150 }
+                    }
+                    
+                    background: Rectangle {
+                        color: "transparent"
+                        radius: 8
+                        border.color: App.Style.accent
+                        border.width: 1
+                    }
+                    
+                    contentItem: Text {
+                        text: "Home"
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                        color: App.Style.primaryTextColor
+                        font.pixelSize: App.Spacing.overallText
+                        font.bold: true
+                    }
+                    
+                    MouseArea {
+                        id: mouseAreaHome
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        onClicked: {
+                            // Pop to root/main menu
+                            while (stackView.depth > 1) {
+                                stackView.pop();
+                            }
+                        }
+                    }
+                }
+                
                 // OBD Button
                 Control {
                     id: obdButton

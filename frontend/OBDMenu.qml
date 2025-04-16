@@ -82,6 +82,7 @@ Item {
         }
     }
 
+
     // Function to get all visible parameters
     function getVisibleParameters() {
         const allParams = [
@@ -98,7 +99,7 @@ Item {
             true
         );
     }
-    
+
     // Function to update the layout
     function updateLayout() {
         const visibleParams = getVisibleParameters();
@@ -114,7 +115,6 @@ Item {
         flowLayout.columns = columns;
         
         // Calculate available height considering the bottom bar
-        // The bottom bar is approximately 60 pixels high
         const bottomBarHeight = 70; // Increased to account for bottom bar and any padding
         
         // Update each item's size based on column count and available height
@@ -135,7 +135,7 @@ Item {
         
         console.log("Layout updated: " + columns + " columns, " + rows + " rows, " + totalParams + " parameters");
     }
-
+    
     // Enhanced Parameter Display with Slider
     component ParameterDisplay: Rectangle {
         property string title: ""

@@ -130,6 +130,10 @@ QtObject {
     property real formElementHeightPercent: 0.1
     property real formLabelWidthPercent: 0.2
     property real formInputWidthPercent: 0.4
+
+    // ===== Main Menu Properties =====
+    property real mainMenuOBDTextPercent: 0.075
+    property real mainMenuOBDDataPercent: 0.1
     
     // ===== Core scaling functions =====
     /**
@@ -247,4 +251,7 @@ QtObject {
     property int formElementHeight: scaledSize(applicationHeight * formElementHeightPercent)
     property int formLabelWidth: scaledSize(applicationWidth * formLabelWidthPercent)
     property int formInputWidth: scaledSize(applicationWidth * formInputWidthPercent)
+
+    property int mainMenuOBDTextSize: scaledSize(Math.min(applicationWidth, applicationHeight) * mainMenuOBDTextPercent)
+    property int mainMenuOBDDataSize: scaledSize(Math.min(applicationWidth, applicationHeight) * mainMenuOBDDataPercent)
 }

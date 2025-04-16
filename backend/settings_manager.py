@@ -22,7 +22,9 @@ class SettingsManager(QObject):
     obdParametersChanged = Signal()
     mediaFolderChanged = Signal(str)
     showBackgroundOverlayChanged = Signal(bool)
-    directoryHistoryChanged = Signal() 
+    directoryHistoryChanged = Signal()
+    homeOBDParametersChanged = Signal()
+    customThemesChanged = Signal() 
     
     def __init__(self):
         super().__init__()
@@ -46,7 +48,6 @@ class SettingsManager(QObject):
             "showBackgroundOverlay": True,
             "fuelTankCapacity": 15.0,  # Add fuel tank capacity setting in gallons
             "obdParameters": {
-                # Original parameters
                 "COOLANT_TEMP": True,
                 "CONTROL_MODULE_VOLTAGE": True,
                 "ENGINE_LOAD": True,
@@ -57,8 +58,6 @@ class SettingsManager(QObject):
                 "SPEED": True,
                 "RPM": True,
                 "COMMANDED_EQUIV_RATIO": True,
-                
-                # New parameters
                 "FUEL_LEVEL": True,
                 "INTAKE_PRESSURE": True,
                 "SHORT_FUEL_TRIM_1": True,
@@ -68,9 +67,12 @@ class SettingsManager(QObject):
                 "OIL_TEMP": True,
                 "FUEL_ECONOMY": True,
                 "DISTANCE_TO_EMPTY": True,
-                "IGNITION_TIMING": True
-            }
+                "IGNITION_TIMING": True,
+            },
+            "homeOBDParameters": ["SPEED", "RPM", "COOLANT_TEMP", "CONTROL_MODULE_VOLTAGE"],
         }
+            
+    
         
         self._default_settings["directoryHistory"] = []
             
@@ -100,6 +102,7 @@ class SettingsManager(QObject):
         self._media_folder = self._settings.get("mediaFolder", os.path.join(self.backend_dir, 'media'))
         self._show_background_overlay = self._settings.get("showBackgroundOverlay", self._default_settings["showBackgroundOverlay"])
         self._fuel_tank_capacity = self._settings.get("fuelTankCapacity", self._default_settings["fuelTankCapacity"])
+        self._home_obd_parameters = self._settings.get("homeOBDParameters", self._default_settings["homeOBDParameters"])
 
 
         
@@ -200,6 +203,18 @@ class SettingsManager(QObject):
     @Property('QVariantList', notify=directoryHistoryChanged)
     def directoryHistory(self):
         return self._directory_history
+    
+    @Property('QVariantList', notify=homeOBDParametersChanged)
+    def homeOBDParameters(self):
+        return self._home_obd_parameters
+    
+    @Property('QVariantList', notify=customThemesChanged)
+    def customThemes(self):
+        """Return list of custom theme names"""
+        settings = self.load_settings()
+        if "customThemes" in settings:
+            return list(settings["customThemes"].keys())
+        return []
 
     # Existing save methods
     @Slot(float)
@@ -395,6 +410,70 @@ class SettingsManager(QObject):
     def get_directory_history(self):
         return self._directory_history
     
+    @Slot('QVariantList')
+    def save_home_obd_parameters(self, parameters):
+        print(f"Saving home OBD parameters: {parameters}")
+        self._home_obd_parameters = parameters
+        self.update_setting("homeOBDParameters", parameters, self.homeOBDParametersChanged)
+
+    @Slot('QVariantList')
+    def save_home_obd_parameters(self, parameters):
+        print(f"Saving home OBD parameters: {parameters}")
+        self._home_obd_parameters = parameters
+        
+        # Update the settings file
+        settings = self.load_settings()
+        settings["homeOBDParameters"] = parameters
+        self.save_settings(settings)
+        
+        # Emit signal WITHOUT parameters
+        self.homeOBDParametersChanged.emit()  # Don't pass any parameters here
+        
+    @Slot(result='QVariantList')
+    def get_home_obd_parameters(self):
+        """Return the list of OBD parameters to display on home screen"""
+        return self._home_obd_parameters
+    
+    @Slot(str, str)
+    def save_custom_theme(self, name, theme_json):
+        """Save a custom theme with the given name"""
+        print(f"Saving custom theme: {name}")
+        
+        # Load current settings to not overwrite other changes
+        settings = self.load_settings()
+        
+        # Make sure customThemes exists in settings
+        if "customThemes" not in settings:
+            settings["customThemes"] = {}
+        
+        # Parse the theme from JSON
+        theme_obj = json.loads(theme_json)
+        
+        # Save the theme
+        settings["customThemes"][name] = theme_obj
+        
+        # Save the updated settings
+        self.save_settings(settings)
+        
+        # Emit the change signal
+        self.customThemesChanged.emit()
+        
+    @Slot(str, result=str)
+    def get_custom_theme(self, name):
+        """Get a custom theme by name as JSON string"""
+        settings = self.load_settings()
+        if "customThemes" in settings and name in settings["customThemes"]:
+            return json.dumps(settings["customThemes"][name])
+        return "{}"
+
+    @Slot(str)
+    def delete_custom_theme(self, name):
+        """Delete a custom theme by name"""
+        settings = self.load_settings()
+        if "customThemes" in settings and name in settings["customThemes"]:
+            del settings["customThemes"][name]
+            self.save_settings(settings)
+            self.customThemesChanged.emit()
 
     @Slot()
     def reset_to_defaults(self):

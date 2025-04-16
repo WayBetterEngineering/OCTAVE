@@ -153,8 +153,71 @@ Item {
             width: control.width - control.indicator.width - control.spacing - 10
         }
     }
-    
 
+    component SettingsCheckBox: Item {
+        id: control
+        height: 44
+        implicitHeight: 44
+        Layout.fillWidth: true
+        
+        property bool checked: false
+        property string text: ""
+        signal toggled(bool checked)
+        
+        RowLayout {
+            anchors.fill: parent
+            spacing: App.Spacing.overallSpacing * 1.5
+            
+            // Larger, more touchable checkbox
+            Rectangle {
+                id: checkboxRect
+                width: 30
+                height: 30
+                radius: 4
+                color: control.checked ? App.Style.accent : "transparent"
+                border.color: control.checked ? App.Style.accent : App.Style.secondaryTextColor
+                border.width: 2
+                
+                // Checkmark
+                Text {
+                    visible: control.checked
+                    text: "✓"
+                    font.pixelSize: 22
+                    color: "white"
+                    anchors.centerIn: parent
+                }
+                
+                // Add a mouseover effect
+                Rectangle {
+                    anchors.fill: parent
+                    color: "white"
+                    radius: 4
+                    opacity: checkboxArea.containsMouse ? 0.1 : 0
+                }
+            }
+            
+            // Text label
+            Text {
+                text: control.text
+                color: App.Style.primaryTextColor
+                font.pixelSize: App.Spacing.overallText
+                Layout.fillWidth: true
+                elide: Text.ElideRight
+            }
+        }
+        
+        // Make entire row clickable for improved touch interaction
+        MouseArea {
+            id: checkboxArea
+            anchors.fill: parent
+            hoverEnabled: true
+            onClicked: {
+                control.checked = !control.checked
+                control.toggled(control.checked)
+            }
+        }
+    }
+    
     component SettingsTextField: TextField {
         id: control
         Layout.preferredHeight: App.Spacing.formElementHeight
@@ -181,6 +244,51 @@ Item {
             }
             
             Behavior on border.color { ColorAnimation { duration: 200 } }
+        }
+    }
+
+    component HomeScreenButton: Item {
+        id: control
+        width: 64
+        height: 44
+        Layout.alignment: Qt.AlignCenter // Add this to center it in the layout
+        
+        property bool isActive: false
+        signal clicked()
+        
+        Rectangle {
+            anchors.fill: parent
+            radius: 4
+            color: control.isActive ? Qt.rgba(App.Style.accent.r, App.Style.accent.g, App.Style.accent.b, 0.2) : "transparent"
+            border.color: control.isActive ? App.Style.accent : "transparent"
+            border.width: 1
+            
+            // Visual feedback on hover
+            Rectangle {
+                anchors.fill: parent
+                radius: 4
+                color: homeButtonArea.containsMouse ? Qt.rgba(1, 1, 1, 0.1) : "transparent"
+            }
+            
+            // Home icon with better visibility
+            Text {
+                anchors.centerIn: parent
+                text: control.isActive ? "🏠" : "⌂"
+                font.pixelSize: 24
+                color: control.isActive ? App.Style.accent : App.Style.secondaryTextColor
+                
+                // Small animation on click
+                scale: homeButtonArea.pressed ? 0.9 : 1.0
+                Behavior on scale { NumberAnimation { duration: 100 } }
+            }
+        }
+        
+        // Larger touch area
+        MouseArea {
+            id: homeButtonArea
+            anchors.fill: parent
+            hoverEnabled: true
+            onClicked: control.clicked()
         }
     }
     
@@ -786,6 +894,8 @@ Item {
                                     }
                                 }
                             }
+
+                            SettingsDivider {}
                             
                             // Future device settings can be added here
                             
@@ -1182,9 +1292,79 @@ Item {
                         contentWidth: parent.width
                         ScrollBar.vertical.policy: ScrollBar.AsNeeded
                         clip: true
+                    
                         
                         ColumnLayout {
                             width: parent.width
+
+                    
+                            // Make sure the loadThemeColors function is properly defined in scope
+                            function loadThemeColors(themeName) {
+                                console.log("Loading theme colors for:", themeName)
+                                let themeObj
+                                
+                                try {
+                                    // Check if it's a custom theme
+                                    if (settingsManager && settingsManager.customThemes && 
+                                        settingsManager.customThemes.indexOf(themeName) !== -1) {
+                                        let themeJSON = settingsManager.get_custom_theme(themeName)
+                                        themeObj = JSON.parse(themeJSON)
+                                    } else if (App.Style.themes[themeName]) {
+                                        // Built-in theme
+                                        themeObj = App.Style.themes[themeName]
+                                    } else {
+                                        console.log("Unknown theme:", themeName)
+                                        return // Unknown theme
+                                    }
+                                    
+                                    // Update color rectangles
+                                    baseColorRect.color = themeObj.base
+                                    baseColorRect.colorValue = themeObj.base
+                                    
+                                    baseAltColorRect.color = themeObj.baseAlt
+                                    baseAltColorRect.colorValue = themeObj.baseAlt
+                                    
+                                    accentColorRect.color = themeObj.accent
+                                    accentColorRect.colorValue = themeObj.accent
+                                    
+                                    primaryTextColorRect.color = themeObj.text.primary
+                                    primaryTextColorRect.colorValue = themeObj.text.primary
+                                    
+                                    secondaryTextColorRect.color = themeObj.text.secondary
+                                    secondaryTextColorRect.colorValue = themeObj.text.secondary
+                                    
+                                    // Use the media highlight color if available, otherwise use accent
+                                    let mediaColor = themeObj.sliders && themeObj.sliders.media ? 
+                                                themeObj.sliders.media : themeObj.accent
+                                    mediaHighlightColorRect.color = mediaColor
+                                    mediaHighlightColorRect.colorValue = mediaColor
+                                    
+                                    // Don't set theme name when loading - only when using "Copy of"
+                                    if (customThemeName.text === "" || customThemeName.text.startsWith("Copy of")) {
+                                        customThemeName.text = "Copy of " + themeName
+                                    }
+                                } catch (e) {
+                                    console.error("Error in loadThemeColors:", e)
+                                }
+                            }
+
+                            Component.onCompleted: {
+                                // When the display settings page loads, set the color boxes to match the current theme
+                                Qt.callLater(function() {
+                                    if (settingsManager) {
+                                        loadThemeColors(settingsManager.themeSetting)
+                                    }
+                                })
+                            }
+
+                            Connections {
+                                target: settingsManager
+                                function onThemeSettingChanged() {
+                                    if (settingsManager && visible) {
+                                        loadThemeColors(settingsManager.themeSetting)
+                                    }
+                                }
+                            }
 
                              // UI Scaling slider
                             ColumnLayout {
@@ -1337,27 +1517,1118 @@ Item {
                                     text: "Theme"
                                 }
                                 
-                                // In the Theme Selection section, update the control to:
+                                // Update theme options when themes change
+                                Connections {
+                                    target: App.Style
+                                    function onCustomThemesUpdated() {
+                                        // Force refresh of theme options
+                                        themeButton.options = App.Style.getAllThemeNames()
+                                    }
+                                }
+
+                                // Theme selection chips
                                 SettingsChips {
                                     id: themeButton
                                     Layout.fillWidth: true
-                                    currentValue: settingsManager ? settingsManager.themeSetting : "Light" // Changed from displayText
-                                    options: Object.keys(App.Style.themes)
+                                    currentValue: settingsManager ? settingsManager.themeSetting : "Light"
+                                    options: App.Style.getAllThemeNames()
                                     
                                     onSelected: function(value) {
                                         if (settingsManager) {
                                             mainWindow.updateTheme(value)
+                                            try {
+                                                loadThemeColors(value)
+                                            } catch (e) {
+                                                console.error("Error loading theme colors:", e)
+                                            }
+                                        }
+                                    }
+                                }
+                                
+                                // Spacer to push delete button to bottom
+                                Item {
+                                    Layout.fillHeight: true
+                                    Layout.minimumHeight: 10
+                                }
+                                
+                                // Container for delete button to position it at right
+                                Item {
+                                    Layout.fillWidth: true
+                                    Layout.preferredHeight: deleteThemeButton.height
+                                    
+                                    // Delete button in bottom right
+                                    Button {
+                                        id: deleteThemeButton
+                                        text: "Delete Theme"
+                                        anchors.right: parent.right
+                                        enabled: settingsManager && 
+                                                settingsManager.customThemes && 
+                                                settingsManager.customThemes.indexOf(settingsManager.themeSetting) !== -1
+                                        Layout.preferredWidth: 150
+                                        width: 150
+                                        height: 50
+                                        
+                                        background: Rectangle {
+                                            color: {
+                                                if (!deleteThemeButton.enabled) {
+                                                    return "#cccccc"  // Gray when disabled
+                                                } else if (deleteThemeButton.pressed) {
+                                                    return Qt.darker("#f44336", 1.2)
+                                                } else if (deleteThemeButton.hovered) {
+                                                    return Qt.lighter("#f44336", 1.1)
+                                                } else {
+                                                    return "#f44336"
+                                                }
+                                            }
+                                            radius: 4
+                                        }
+                                        
+                                        contentItem: Text {
+                                            text: deleteThemeButton.text
+                                            color: deleteThemeButton.enabled ? "white" : "#666666"  // Darker text when disabled
+                                            font.pixelSize: App.Spacing.overallText * 0.9
+                                            horizontalAlignment: Text.AlignHCenter
+                                            verticalAlignment: Text.AlignVCenter
+                                        }
+                                        
+                                        onClicked: {
+                                            if (deleteThemeButton.enabled) {
+                                                deleteThemeConfirmDialog.themeName = settingsManager.themeSetting
+                                                deleteThemeConfirmDialog.open()
+                                            }
                                         }
                                     }
                                 }
                             }
-                            
 
+                            SettingsDivider {}
+
+                            ColumnLayout {
+                                Layout.fillWidth: true
+                                spacing: App.Spacing.rowSpacing
+                                
+                                SettingLabel {
+                                    text: "Custom Theme Creator"
+                                }
+                                
+                                SettingDescription {
+                                    text: "Create and save your own custom themes"
+                                }
+                                
+                                // Theme name input
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    spacing: App.Spacing.rowSpacing
+                                    
+                                    Text {
+                                        text: "Theme Name:"
+                                        color: App.Style.primaryTextColor
+                                        font.pixelSize: App.Spacing.overallText
+                                    }
+                                    
+                                    SettingsTextField {
+                                        id: customThemeName
+                                        Layout.fillWidth: true
+                                        // Initially set to current theme name
+                                        text: settingsManager ? settingsManager.themeSetting : ""
+                                        // This ensures placeholder disappears when typing instead of moving to the top
+                                        placeholderTextColor: customThemeName.text.length > 0 ? "transparent" : Qt.rgba(App.Style.primaryTextColor.r, App.Style.primaryTextColor.g, App.Style.primaryTextColor.b, 0.5)
+                                        placeholderText: "My Custom Theme"
+                                    }
+                                }
+                                
+                                // Color selection grid - expanded with more color options
+                                GridLayout {
+                                    Layout.fillWidth: true
+                                    columns: 2
+                                    columnSpacing: App.Spacing.overallSpacing * 2
+                                    rowSpacing: App.Spacing.rowSpacing
+                                    
+                                    // Base color
+                                    Text {
+                                        text: "Base Background:"
+                                        color: App.Style.primaryTextColor
+                                        font.pixelSize: App.Spacing.overallText
+                                    }
+                                    
+                                    Rectangle {
+                                        id: baseColorRect
+                                        Layout.preferredWidth: 120
+                                        Layout.preferredHeight: 30
+                                        color: "#f5f5f5"
+                                        radius: 4
+                                        border.width: 1
+                                        border.color: Qt.rgba(App.Style.primaryTextColor.r, 
+                                                            App.Style.primaryTextColor.g, 
+                                                            App.Style.primaryTextColor.b, 0.3)
+                                        
+                                        property string colorValue: "#f5f5f5"
+                                        
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            onClicked: {
+                                                colorDialog.currentColor = baseColorRect.color
+                                                colorDialog.targetRect = baseColorRect
+                                                colorDialog.open()
+                                            }
+                                        }
+                                    }
+                                    
+                                    // Alt base color
+                                    Text {
+                                        text: "Alt Background:"
+                                        color: App.Style.primaryTextColor
+                                        font.pixelSize: App.Spacing.overallText
+                                    }
+                                    
+                                    Rectangle {
+                                        id: baseAltColorRect
+                                        Layout.preferredWidth: 120
+                                        Layout.preferredHeight: 30
+                                        color: "#e5e5e5"
+                                        radius: 4
+                                        border.width: 1
+                                        border.color: Qt.rgba(App.Style.primaryTextColor.r, 
+                                                            App.Style.primaryTextColor.g, 
+                                                            App.Style.primaryTextColor.b, 0.3)
+                                        
+                                        property string colorValue: "#e5e5e5"
+                                        
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            onClicked: {
+                                                colorDialog.currentColor = baseAltColorRect.color
+                                                colorDialog.targetRect = baseAltColorRect
+                                                colorDialog.open()
+                                            }
+                                        }
+                                    }
+                                    
+                                    // Accent color
+                                    Text {
+                                        text: "Accent Color:"
+                                        color: App.Style.primaryTextColor
+                                        font.pixelSize: App.Spacing.overallText
+                                    }
+                                    
+                                    Rectangle {
+                                        id: accentColorRect
+                                        Layout.preferredWidth: 120
+                                        Layout.preferredHeight: 30
+                                        color: "#2196F3"
+                                        radius: 4
+                                        border.width: 1
+                                        border.color: Qt.rgba(App.Style.primaryTextColor.r, 
+                                                            App.Style.primaryTextColor.g, 
+                                                            App.Style.primaryTextColor.b, 0.3)
+                                        
+                                        property string colorValue: "#2196F3"
+                                        
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            onClicked: {
+                                                colorDialog.currentColor = accentColorRect.color
+                                                colorDialog.targetRect = accentColorRect
+                                                colorDialog.open()
+                                            }
+                                        }
+                                    }
+                                    
+                                    // Primary text color
+                                    Text {
+                                        text: "Primary Text:"
+                                        color: App.Style.primaryTextColor
+                                        font.pixelSize: App.Spacing.overallText
+                                    }
+                                    
+                                    Rectangle {
+                                        id: primaryTextColorRect
+                                        Layout.preferredWidth: 120
+                                        Layout.preferredHeight: 30
+                                        color: "#212121"
+                                        radius: 4
+                                        border.width: 1
+                                        border.color: Qt.rgba(App.Style.primaryTextColor.r, 
+                                                            App.Style.primaryTextColor.g, 
+                                                            App.Style.primaryTextColor.b, 0.3)
+                                        
+                                        property string colorValue: "#212121"
+                                        
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            onClicked: {
+                                                colorDialog.currentColor = primaryTextColorRect.color
+                                                colorDialog.targetRect = primaryTextColorRect
+                                                colorDialog.open()
+                                            }
+                                        }
+                                    }
+                                    
+                                    // Secondary text color
+                                    Text {
+                                        text: "Secondary Text:"
+                                        color: App.Style.primaryTextColor
+                                        font.pixelSize: App.Spacing.overallText
+                                    }
+                                    
+                                    Rectangle {
+                                        id: secondaryTextColorRect
+                                        Layout.preferredWidth: 120
+                                        Layout.preferredHeight: 30
+                                        color: "#757575"
+                                        radius: 4
+                                        border.width: 1
+                                        border.color: Qt.rgba(App.Style.primaryTextColor.r, 
+                                                            App.Style.primaryTextColor.g, 
+                                                            App.Style.primaryTextColor.b, 0.3)
+                                        
+                                        property string colorValue: "#757575"
+                                        
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            onClicked: {
+                                                colorDialog.currentColor = secondaryTextColorRect.color
+                                                colorDialog.targetRect = secondaryTextColorRect
+                                                colorDialog.open()
+                                            }
+                                        }
+                                    }
+                                    
+                                    // Media player highlight color
+                                    Text {
+                                        text: "Media Highlight:"
+                                        color: App.Style.primaryTextColor
+                                        font.pixelSize: App.Spacing.overallText
+                                    }
+                                    
+                                    Rectangle {
+                                        id: mediaHighlightColorRect
+                                        Layout.preferredWidth: 120
+                                        Layout.preferredHeight: 30
+                                        color: "#1976D2"
+                                        radius: 4
+                                        border.width: 1
+                                        border.color: Qt.rgba(App.Style.primaryTextColor.r, 
+                                                            App.Style.primaryTextColor.g, 
+                                                            App.Style.primaryTextColor.b, 0.3)
+                                        
+                                        property string colorValue: "#1976D2"
+                                        
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            onClicked: {
+                                                colorDialog.currentColor = mediaHighlightColorRect.color
+                                                colorDialog.targetRect = mediaHighlightColorRect
+                                                colorDialog.open()
+                                            }
+                                        }
+                                    }
+                                    
+                                    // Volume Slider color
+                                    Text {
+                                        text: "Volume Slider:"
+                                        color: App.Style.primaryTextColor
+                                        font.pixelSize: App.Spacing.overallText
+                                    }
+                                    
+                                    Rectangle {
+                                        id: volumeSliderColorRect
+                                        Layout.preferredWidth: 120
+                                        Layout.preferredHeight: 30
+                                        color: "#FF9800"
+                                        radius: 4
+                                        border.width: 1
+                                        border.color: Qt.rgba(App.Style.primaryTextColor.r, 
+                                                            App.Style.primaryTextColor.g, 
+                                                            App.Style.primaryTextColor.b, 0.3)
+                                        
+                                        property string colorValue: "#FF9800"
+                                        
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            onClicked: {
+                                                colorDialog.currentColor = volumeSliderColorRect.color
+                                                colorDialog.targetRect = volumeSliderColorRect
+                                                colorDialog.open()
+                                            }
+                                        }
+                                    }
+                                    
+                                    // Bottom Bar Buttons color
+                                    Text {
+                                        text: "Bottom Bar Buttons:"
+                                        color: App.Style.primaryTextColor
+                                        font.pixelSize: App.Spacing.overallText
+                                    }
+                                    
+                                    Rectangle {
+                                        id: bottomBarButtonsColorRect
+                                        Layout.preferredWidth: 120
+                                        Layout.preferredHeight: 30
+                                        color: "#4CAF50"
+                                        radius: 4
+                                        border.width: 1
+                                        border.color: Qt.rgba(App.Style.primaryTextColor.r, 
+                                                            App.Style.primaryTextColor.g, 
+                                                            App.Style.primaryTextColor.b, 0.3)
+                                        
+                                        property string colorValue: "#4CAF50"
+                                        
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            onClicked: {
+                                                colorDialog.currentColor = bottomBarButtonsColorRect.color
+                                                colorDialog.targetRect = bottomBarButtonsColorRect
+                                                colorDialog.open()
+                                            }
+                                        }
+                                    }
+                                    
+                                    // Media Room Buttons color
+                                    Text {
+                                        text: "Media Room Buttons:"
+                                        color: App.Style.primaryTextColor
+                                        font.pixelSize: App.Spacing.overallText
+                                    }
+                                    
+                                    Rectangle {
+                                        id: mediaRoomButtonsColorRect
+                                        Layout.preferredWidth: 120
+                                        Layout.preferredHeight: 30
+                                        color: "#9C27B0"
+                                        radius: 4
+                                        border.width: 1
+                                        border.color: Qt.rgba(App.Style.primaryTextColor.r, 
+                                                            App.Style.primaryTextColor.g, 
+                                                            App.Style.primaryTextColor.b, 0.3)
+                                        
+                                        property string colorValue: "#9C27B0"
+                                        
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            onClicked: {
+                                                colorDialog.currentColor = mediaRoomButtonsColorRect.color
+                                                colorDialog.targetRect = mediaRoomButtonsColorRect
+                                                colorDialog.open()
+                                            }
+                                        }
+                                    }
+                                    
+                                    // Media Container color
+                                    Text {
+                                        text: "Media Container:"
+                                        color: App.Style.primaryTextColor
+                                        font.pixelSize: App.Spacing.overallText
+                                    }
+                                    
+                                    Rectangle {
+                                        id: mediaContainerColorRect
+                                        Layout.preferredWidth: 120
+                                        Layout.preferredHeight: 30
+                                        color: "#607D8B"
+                                        radius: 4
+                                        border.width: 1
+                                        border.color: Qt.rgba(App.Style.primaryTextColor.r, 
+                                                            App.Style.primaryTextColor.g, 
+                                                            App.Style.primaryTextColor.b, 0.3)
+                                        
+                                        property string colorValue: "#607D8B"
+                                        
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            onClicked: {
+                                                colorDialog.currentColor = mediaContainerColorRect.color
+                                                colorDialog.targetRect = mediaContainerColorRect
+                                                colorDialog.open()
+                                            }
+                                        }
+                                    }
+                                    
+                                    // Hover state color
+                                    Text {
+                                        text: "Hover Effect:"
+                                        color: App.Style.primaryTextColor
+                                        font.pixelSize: App.Spacing.overallText
+                                    }
+                                    
+                                    Rectangle {
+                                        id: hoverStateColorRect
+                                        Layout.preferredWidth: 120
+                                        Layout.preferredHeight: 30
+                                        color: Qt.lighter(baseAltColorRect.color, 1.1)
+                                        radius: 4
+                                        border.width: 1
+                                        border.color: Qt.rgba(App.Style.primaryTextColor.r, 
+                                                            App.Style.primaryTextColor.g, 
+                                                            App.Style.primaryTextColor.b, 0.3)
+                                        
+                                        property string colorValue: Qt.lighter(baseAltColorRect.colorValue, 1.1)
+                                        
+                                        // Update hover color when baseAlt changes
+                                        Connections {
+                                            target: baseAltColorRect
+                                            function onColorChanged() {
+                                                hoverStateColorRect.color = Qt.lighter(baseAltColorRect.color, 1.1)
+                                                hoverStateColorRect.colorValue = Qt.lighter(baseAltColorRect.colorValue, 1.1)
+                                            }
+                                        }
+                                        
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            onClicked: {
+                                                colorDialog.currentColor = hoverStateColorRect.color
+                                                colorDialog.targetRect = hoverStateColorRect
+                                                colorDialog.open()
+                                            }
+                                        }
+                                    }
+                                    
+                                    // Paused state color
+                                    Text {
+                                        text: "Paused State:"
+                                        color: App.Style.primaryTextColor
+                                        font.pixelSize: App.Spacing.overallText
+                                    }
+                                    
+                                    Rectangle {
+                                        id: pausedStateColorRect
+                                        Layout.preferredWidth: 120
+                                        Layout.preferredHeight: 30
+                                        color: Qt.lighter(baseAltColorRect.color, 1.2)
+                                        radius: 4
+                                        border.width: 1
+                                        border.color: Qt.rgba(App.Style.primaryTextColor.r, 
+                                                            App.Style.primaryTextColor.g, 
+                                                            App.Style.primaryTextColor.b, 0.3)
+                                        
+                                        property string colorValue: Qt.lighter(baseAltColorRect.colorValue, 1.2)
+                                        
+                                        // Update paused color when baseAlt changes
+                                        Connections {
+                                            target: baseAltColorRect
+                                            function onColorChanged() {
+                                                pausedStateColorRect.color = Qt.lighter(baseAltColorRect.color, 1.2)
+                                                pausedStateColorRect.colorValue = Qt.lighter(baseAltColorRect.colorValue, 1.2)
+                                            }
+                                        }
+                                        
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            onClicked: {
+                                                colorDialog.currentColor = pausedStateColorRect.color
+                                                colorDialog.targetRect = pausedStateColorRect
+                                                colorDialog.open()
+                                            }
+                                        }
+                                    }
+                                    
+                                    // Playing state color
+                                    Text {
+                                        text: "Playing State:"
+                                        color: App.Style.primaryTextColor
+                                        font.pixelSize: App.Spacing.overallText
+                                    }
+                                    
+                                    Rectangle {
+                                        id: playingStateColorRect
+                                        Layout.preferredWidth: 120
+                                        Layout.preferredHeight: 30
+                                        color: Qt.lighter(baseAltColorRect.color, 1.3)
+                                        radius: 4
+                                        border.width: 1
+                                        border.color: Qt.rgba(App.Style.primaryTextColor.r, 
+                                                            App.Style.primaryTextColor.g, 
+                                                            App.Style.primaryTextColor.b, 0.3)
+                                        
+                                        property string colorValue: Qt.lighter(baseAltColorRect.colorValue, 1.3)
+                                        
+                                        // Update playing color when baseAlt changes
+                                        Connections {
+                                            target: baseAltColorRect
+                                            function onColorChanged() {
+                                                playingStateColorRect.color = Qt.lighter(baseAltColorRect.color, 1.3)
+                                                playingStateColorRect.colorValue = Qt.lighter(baseAltColorRect.colorValue, 1.3)
+                                            }
+                                        }
+                                        
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            onClicked: {
+                                                colorDialog.currentColor = playingStateColorRect.color
+                                                colorDialog.targetRect = playingStateColorRect
+                                                colorDialog.open()
+                                            }
+                                        }
+                                    }
+                                }
+                                
+                                // Save theme button
+                                Button {
+                                    text: "Save Theme"
+                                    Layout.alignment: Qt.AlignRight
+                                    Layout.preferredWidth: 150
+                                    Layout.preferredHeight: 50
+                                    
+                                    background: Rectangle {
+                                        color: parent.pressed ? Qt.darker(App.Style.accent, 1.4) : 
+                                            parent.hovered ? Qt.darker(App.Style.accent, 1.2) : 
+                                            App.Style.accent
+                                        radius: 4
+                                    }
+                                    
+                                    contentItem: Text {
+                                        text: parent.text
+                                        color: "white"
+                                        font.pixelSize: App.Spacing.overallText
+                                        horizontalAlignment: Text.AlignHCenter
+                                        verticalAlignment: Text.AlignVCenter
+                                    }
+                                    
+                                    onClicked: {
+                                        // Validate theme name
+                                        if (customThemeName.text.trim() === "") {
+                                            themeNameErrorDialog.open()
+                                            return
+                                        }
+                                        
+                                        // Create theme object with all color values
+                                        let customTheme = {
+                                            "base": baseColorRect.colorValue,
+                                            "baseAlt": baseAltColorRect.colorValue,
+                                            "accent": accentColorRect.colorValue,
+                                            "text": {
+                                                "primary": primaryTextColorRect.colorValue,
+                                                "secondary": secondaryTextColorRect.colorValue
+                                            },
+                                            "states": {
+                                                "hover": hoverStateColorRect.colorValue,
+                                                "paused": pausedStateColorRect.colorValue,
+                                                "playing": playingStateColorRect.colorValue
+                                            },
+                                            "sliders": {
+                                                "volume": volumeSliderColorRect.colorValue,
+                                                "media": mediaHighlightColorRect.colorValue
+                                            },
+                                            "bottombar": {
+                                                "previous": bottomBarButtonsColorRect.colorValue,
+                                                "play": bottomBarButtonsColorRect.colorValue,
+                                                "pause": bottomBarButtonsColorRect.colorValue,
+                                                "next": bottomBarButtonsColorRect.colorValue,
+                                                "volume": bottomBarButtonsColorRect.colorValue,
+                                                "shuffle": bottomBarButtonsColorRect.colorValue,
+                                                "toggleShade": baseAltColorRect.colorValue
+                                            },
+                                            "mediaroom": {
+                                                "previous": mediaRoomButtonsColorRect.colorValue,
+                                                "play": mediaRoomButtonsColorRect.colorValue,
+                                                "pause": mediaRoomButtonsColorRect.colorValue,
+                                                "next": mediaRoomButtonsColorRect.colorValue,
+                                                "left": mediaRoomButtonsColorRect.colorValue,
+                                                "right": mediaRoomButtonsColorRect.colorValue,
+                                                "shuffle": mediaRoomButtonsColorRect.colorValue,
+                                                "toggleShade": baseAltColorRect.colorValue
+                                            },
+                                            "mainmenu": {
+                                                "mediaContainer": mediaContainerColorRect.colorValue
+                                            }
+                                        }
+                                        
+                                        // Save the custom theme
+                                        if (settingsManager) {
+                                            settingsManager.save_custom_theme(customThemeName.text, JSON.stringify(customTheme))
+                                            
+                                            // Show success message
+                                            saveThemeSuccessDialog.open()
+                                            
+                                            // Refresh theme list
+                                            Qt.callLater(function() {
+                                                themeButton.options = App.Style.getAllThemeNames()
+                                            })
+                                        }
+                                    }
+                                }
+                                
+                                // Function to load theme colors from theme name
+                                // Called when component loads and when theme changes
+                                function loadThemeColors(themeName) {
+                                    console.log("Loading theme colors for:", themeName)
+                                    let themeObj
+                                    
+                                    try {
+                                        // Check if it's a custom theme
+                                        if (settingsManager && settingsManager.customThemes && 
+                                            settingsManager.customThemes.indexOf(themeName) !== -1) {
+                                            let themeJSON = settingsManager.get_custom_theme(themeName)
+                                            themeObj = JSON.parse(themeJSON)
+                                        } else if (App.Style.themes[themeName]) {
+                                            // Built-in theme
+                                            themeObj = App.Style.themes[themeName]
+                                        } else {
+                                            console.log("Unknown theme:", themeName)
+                                            return // Unknown theme
+                                        }
+                                        
+                                        // Set the theme name in the input field
+                                        customThemeName.text = themeName
+                                        
+                                        // Update color rectangles
+                                        baseColorRect.color = themeObj.base
+                                        baseColorRect.colorValue = themeObj.base
+                                        
+                                        baseAltColorRect.color = themeObj.baseAlt
+                                        baseAltColorRect.colorValue = themeObj.baseAlt
+                                        
+                                        accentColorRect.color = themeObj.accent
+                                        accentColorRect.colorValue = themeObj.accent
+                                        
+                                        primaryTextColorRect.color = themeObj.text.primary
+                                        primaryTextColorRect.colorValue = themeObj.text.primary
+                                        
+                                        secondaryTextColorRect.color = themeObj.text.secondary
+                                        secondaryTextColorRect.colorValue = themeObj.text.secondary
+                                        
+                                        // State colors
+                                        if (themeObj.states) {
+                                            if (themeObj.states.hover) {
+                                                hoverStateColorRect.color = themeObj.states.hover
+                                                hoverStateColorRect.colorValue = themeObj.states.hover
+                                            }
+                                            
+                                            if (themeObj.states.paused) {
+                                                pausedStateColorRect.color = themeObj.states.paused
+                                                pausedStateColorRect.colorValue = themeObj.states.paused
+                                            }
+                                            
+                                            if (themeObj.states.playing) {
+                                                playingStateColorRect.color = themeObj.states.playing
+                                                playingStateColorRect.colorValue = themeObj.states.playing
+                                            }
+                                        }
+                                        
+                                        // Slider colors
+                                        if (themeObj.sliders) {
+                                            if (themeObj.sliders.volume) {
+                                                volumeSliderColorRect.color = themeObj.sliders.volume
+                                                volumeSliderColorRect.colorValue = themeObj.sliders.volume
+                                            } else {
+                                                volumeSliderColorRect.color = themeObj.accent
+                                                volumeSliderColorRect.colorValue = themeObj.accent
+                                            }
+                                            
+                                            if (themeObj.sliders.media) {
+                                                mediaHighlightColorRect.color = themeObj.sliders.media
+                                                mediaHighlightColorRect.colorValue = themeObj.sliders.media
+                                            } else {
+                                                mediaHighlightColorRect.color = themeObj.accent
+                                                mediaHighlightColorRect.colorValue = themeObj.accent
+                                            }
+                                        }
+                                        
+                                        // Bottom bar button colors
+                                        if (themeObj.bottombar && themeObj.bottombar.play) {
+                                            bottomBarButtonsColorRect.color = themeObj.bottombar.play
+                                            bottomBarButtonsColorRect.colorValue = themeObj.bottombar.play
+                                        } else {
+                                            bottomBarButtonsColorRect.color = themeObj.accent
+                                            bottomBarButtonsColorRect.colorValue = themeObj.accent
+                                        }
+                                        
+                                        // Media room button colors
+                                        if (themeObj.mediaroom && themeObj.mediaroom.play) {
+                                            mediaRoomButtonsColorRect.color = themeObj.mediaroom.play
+                                            mediaRoomButtonsColorRect.colorValue = themeObj.mediaroom.play
+                                        } else {
+                                            mediaRoomButtonsColorRect.color = themeObj.accent
+                                            mediaRoomButtonsColorRect.colorValue = themeObj.accent
+                                        }
+                                        
+                                        // Media container color
+                                        if (themeObj.mainmenu && themeObj.mainmenu.mediaContainer) {
+                                            mediaContainerColorRect.color = themeObj.mainmenu.mediaContainer
+                                            mediaContainerColorRect.colorValue = themeObj.mainmenu.mediaContainer
+                                        } else {
+                                            mediaContainerColorRect.color = Qt.darker(themeObj.accent, 1.2)
+                                            mediaContainerColorRect.colorValue = Qt.darker(themeObj.accent, 1.2)
+                                        }
+                                        
+                                    } catch (e) {
+                                        console.error("Error in loadThemeColors:", e)
+                                    }
+                                }
+                                
+                                // Initialize with current theme when component loads
+                                Component.onCompleted: {
+                                    Qt.callLater(function() {
+                                        if (settingsManager) {
+                                            loadThemeColors(settingsManager.themeSetting)
+                                        }
+                                    })
+                                }
+                                
+                                // Update when theme changes
+                                Connections {
+                                    target: settingsManager
+                                    function onThemeSettingChanged() {
+                                        if (settingsManager) {
+                                            loadThemeColors(settingsManager.themeSetting)
+                                        }
+                                    }
+                                }
+                                
+                                // Update when theme button options change
+                                Connections {
+                                    target: themeButton
+                                    function onCurrentValueChanged() {
+                                        if (settingsManager && themeButton.currentValue) {
+                                            loadThemeColors(themeButton.currentValue)
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Color Dialog for picking colors
+                            Dialog {
+                                id: colorDialog
+                                title: "Select Color"
+                                width: 320
+                                height: 420
+                                anchors.centerIn: parent
+                                modal: true
+                                
+                                property var targetRect: null
+                                property color currentColor: "white"
+                                property var colorGrid: [
+                                    ["#f44336", "#e91e63", "#9c27b0", "#673ab7", "#3f51b5", "#2196f3"],
+                                    ["#03a9f4", "#00bcd4", "#009688", "#4caf50", "#8bc34a", "#cddc39"],
+                                    ["#ffeb3b", "#ffc107", "#ff9800", "#ff5722", "#795548", "#9e9e9e"],
+                                    ["#607d8b", "#ffffff", "#f5f5f5", "#eeeeee", "#bdbdbd", "#212121"]
+                                ]
+                                
+                                contentItem: ColumnLayout {
+                                    anchors.fill: parent
+                                    spacing: 10
+                                    
+                                    // Current color preview
+                                    Rectangle {
+                                        Layout.fillWidth: true
+                                        Layout.preferredHeight: 60
+                                        color: colorDialog.currentColor
+                                        border.width: 1
+                                        border.color: Qt.rgba(0, 0, 0, 0.2)
+                                        
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: colorDialog.currentColor
+                                            color: isDarkColor(colorDialog.currentColor) ? "white" : "black"
+                                            font.pixelSize: 16
+                                            
+                                            // Simple function to determine if text should be white or black
+                                            function isDarkColor(color) {
+                                                let r = color.r * 255
+                                                let g = color.g * 255
+                                                let b = color.b * 255
+                                                return (r * 0.299 + g * 0.587 + b * 0.114) < 128
+                                            }
+                                        }
+                                    }
+                                    
+                                    // Color grid
+                                    GridLayout {
+                                        Layout.fillWidth: true
+                                        columns: 6
+                                        columnSpacing: 5
+                                        rowSpacing: 5
+                                        
+                                        Repeater {
+                                            model: {
+                                                // Create a flattened array manually
+                                                let flatColors = [];
+                                                for (let i = 0; i < colorDialog.colorGrid.length; i++) {
+                                                    let row = colorDialog.colorGrid[i];
+                                                    for (let j = 0; j < row.length; j++) {
+                                                        flatColors.push(row[j]);
+                                                    }
+                                                }
+                                                return flatColors;
+                                            }
+                                            
+                                            delegate: Rectangle {
+                                                width: 40
+                                                height: 40
+                                                color: modelData
+                                                border.width: 1
+                                                border.color: Qt.rgba(0, 0, 0, 0.2)
+                                                
+                                                MouseArea {
+                                                    anchors.fill: parent
+                                                    onClicked: {
+                                                        colorDialog.currentColor = modelData
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                    
+                                    // Custom color components (RGB)
+                                    RowLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 5
+                                        
+                                        Text {
+                                            text: "R:"
+                                            color: App.Style.primaryTextColor
+                                        }
+                                        
+                                        Slider {
+                                            id: redSlider
+                                            Layout.fillWidth: true
+                                            from: 0
+                                            to: 255
+                                            value: {
+                                                let val = colorDialog.currentColor.r * 255;
+                                                return isNaN(val) ? 0 : val;
+                                            }
+                                            
+                                            onValueChanged: {
+                                                colorDialog.currentColor = Qt.rgba(value / 255, 
+                                                                                colorDialog.currentColor.g, 
+                                                                                colorDialog.currentColor.b, 
+                                                                                1.0)
+                                            }
+                                        }
+
+                                        
+                                        Text {
+                                            text: Math.round(redSlider.value)
+                                            color: App.Style.primaryTextColor
+                                            width: 30
+                                        }
+                                    }
+                                    
+                                    RowLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 5
+                                        
+                                        Text {
+                                            text: "G:"
+                                            color: App.Style.primaryTextColor
+                                        }
+                                        
+                                        Slider {
+                                            id: greenSlider
+                                            Layout.fillWidth: true
+                                            from: 0
+                                            to: 255
+                                            value: colorDialog.currentColor.g * 255
+                                            
+                                            onValueChanged: {
+                                                colorDialog.currentColor = Qt.rgba(colorDialog.currentColor.r, 
+                                                                                value / 255, 
+                                                                                colorDialog.currentColor.b, 
+                                                                                1.0)
+                                            }
+                                        }
+                                        
+                                        Text {
+                                            text: Math.round(greenSlider.value)
+                                            color: App.Style.primaryTextColor
+                                            width: 30
+                                        }
+                                    }
+                                    
+                                    RowLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 5
+                                        
+                                        Text {
+                                            text: "B:"
+                                            color: App.Style.primaryTextColor
+                                        }
+                                        
+                                        Slider {
+                                            id: blueSlider
+                                            Layout.fillWidth: true
+                                            from: 0
+                                            to: 255
+                                            value: colorDialog.currentColor.b * 255
+                                            
+                                            onValueChanged: {
+                                                colorDialog.currentColor = Qt.rgba(colorDialog.currentColor.r, 
+                                                                                colorDialog.currentColor.g, 
+                                                                                value / 255, 
+                                                                                1.0)
+                                            }
+                                        }
+                                        
+                                        Text {
+                                            text: Math.round(blueSlider.value)
+                                            color: App.Style.primaryTextColor
+                                            width: 30
+                                        }
+                                    }
+                                    
+                                    // OK/Cancel buttons
+                                    RowLayout {
+                                        Layout.fillWidth: true
+                                        Layout.alignment: Qt.AlignRight
+                                        spacing: 10
+                                        
+                                        Button {
+                                            text: "Cancel"
+                                            onClicked: {
+                                                colorDialog.close()
+                                            }
+                                        }
+                                        
+                                        Button {
+                                            text: "OK"
+                                            onClicked: {
+                                                // Update the target rectangle with the selected color
+                                                if (colorDialog.targetRect) {
+                                                    colorDialog.targetRect.color = colorDialog.currentColor
+                                                    
+                                                    // Convert color to hex string and store it
+                                                    let r = Math.round(colorDialog.currentColor.r * 255).toString(16).padStart(2, '0')
+                                                    let g = Math.round(colorDialog.currentColor.g * 255).toString(16).padStart(2, '0')
+                                                    let b = Math.round(colorDialog.currentColor.b * 255).toString(16).padStart(2, '0')
+                                                    let hexColor = "#" + r + g + b
+                                                    colorDialog.targetRect.colorValue = hexColor
+                                                }
+                                                colorDialog.close()
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Error dialog for empty theme name
+                            Dialog {
+                                id: themeNameErrorDialog
+                                title: "Error"
+                                width: 300
+                                height: 150
+                                anchors.centerIn: parent
+                                modal: true
+                                
+                                contentItem: ColumnLayout {
+                                    spacing: 20
+                                    anchors.fill: parent
+                                    
+                                    Text {
+                                        text: "Please enter a name for your theme"
+                                        color: App.Style.primaryTextColor
+                                        font.pixelSize: App.Spacing.overallText
+                                        Layout.fillWidth: true
+                                        wrapMode: Text.WordWrap
+                                    }
+                                    
+                                    Button {
+                                        text: "OK"
+                                        Layout.alignment: Qt.AlignHCenter
+                                        onClicked: themeNameErrorDialog.close()
+                                    }
+                                }
+                            }
+
+                            // Success dialog for theme save
+                            Dialog {
+                                id: saveThemeSuccessDialog
+                                title: "Theme Saved"
+                                width: 300
+                                height: 150
+                                anchors.centerIn: parent
+                                modal: true
+                                
+                                contentItem: ColumnLayout {
+                                    spacing: 20
+                                    anchors.fill: parent
+                                    
+                                    Text {
+                                        text: "Your theme has been saved and is now available in the theme selection list"
+                                        color: App.Style.primaryTextColor
+                                        font.pixelSize: App.Spacing.overallText
+                                        Layout.fillWidth: true
+                                        wrapMode: Text.WordWrap
+                                    }
+                                    
+                                    Button {
+                                        text: "OK"
+                                        Layout.alignment: Qt.AlignHCenter
+                                        onClicked: saveThemeSuccessDialog.close()
+                                    }
+                                }
+                            }
                             
-                            
+                            // Add this dialog for confirming theme deletion
+                            Dialog {
+                                id: deleteThemeConfirmDialog
+                                title: "Delete Theme"
+                                width: 300
+                                height: 180
+                                anchors.centerIn: parent
+                                modal: true
+                                
+                                property string themeName: ""
+                                
+                                contentItem: ColumnLayout {
+                                    spacing: 20
+                                    anchors.fill: parent
+                                    
+                                    Text {
+                                        text: "Are you sure you want to delete the theme '" + deleteThemeConfirmDialog.themeName + "'?"
+                                        color: App.Style.primaryTextColor
+                                        font.pixelSize: App.Spacing.overallText
+                                        Layout.fillWidth: true
+                                        wrapMode: Text.WordWrap
+                                    }
+                                    
+                                    RowLayout {
+                                        Layout.alignment: Qt.AlignHCenter
+                                        spacing: 20
+                                        
+                                        Button {
+                                            text: "Cancel"
+                                            onClicked: deleteThemeConfirmDialog.close()
+                                        }
+                                        
+                                        Button {
+                                            text: "Delete"
+                                            
+                                            background: Rectangle {
+                                                color: parent.pressed ? Qt.darker("#f44336", 1.2) : 
+                                                    parent.hovered ? Qt.lighter("#f44336", 1.1) : "#f44336"
+                                                radius: 4
+                                            }
+                                            
+                                            contentItem: Text {
+                                                text: parent.text
+                                                color: "white"
+                                                font.pixelSize: App.Spacing.overallText * 0.9
+                                                horizontalAlignment: Text.AlignHCenter
+                                                verticalAlignment: Text.AlignVCenter
+                                            }
+                                            
+                                            onClicked: {
+                                                if (settingsManager) {
+                                                    // Delete the theme
+                                                    settingsManager.delete_custom_theme(deleteThemeConfirmDialog.themeName)
+                                                    
+                                                    // Switch to default theme
+                                                    mainWindow.updateTheme("Dark")
+                                                    
+                                                    // Close the dialog
+                                                    deleteThemeConfirmDialog.close()
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        
                             Item { Layout.fillHeight: true } // Spacer
                         }
                     }
+                    
                     
                     ScrollView { // OBD Settings Page
                         contentWidth: parent.width
@@ -1366,6 +2637,7 @@ Item {
                         
                         ColumnLayout {
                             width: parent.width
+                            spacing: App.Spacing.sectionSpacing
                             
                             // OBD Connection
                             ColumnLayout {
@@ -1377,32 +2649,331 @@ Item {
                                 }
                                 
                                 Rectangle {
+                                    id: connectionStatusRect
                                     Layout.fillWidth: true
                                     Layout.preferredHeight: 40
-                                    color: obdManager ? (obdManager.is_connected ? App.Style.accent : "#F44336") : "#F44336"
-                                    radius: 4
-
-                                    Text {
-                                        anchors.centerIn: parent
-                                        text: obdManager ? obdManager.get_connection_status() : "Not Connected"
-                                        color: "white"
-                                        font.pixelSize: App.Spacing.overallText
-                                        font.bold: true
+                                    
+                                    // Use more diverse status colors
+                                    property var statusColors: {
+                                        "Connected": App.Style.accent,
+                                        "Connecting": "#FF9800",  // Orange
+                                        "Device Not Found": "#F44336",  // Red
+                                        "Error": "#F44336",  // Red
+                                        "Disconnected": "#E91E63",  // Pink
+                                        "Device Lost": "#9C27B0",  // Purple
+                                        "No Vehicle": "#2196F3"  // Blue
                                     }
-
-                                    MouseArea {
-                                        anchors.fill: parent
-                                        onClicked: {
-                                            if (obdManager) {
-                                                obdManager.reconnect()
+                                    
+                                    // Default to red if status not in our map
+                                    color: obdManager ? 
+                                        (statusColors[obdManager.get_connection_status()] || "#F44336") : 
+                                        "#F44336"
+                                    radius: 4
+                                    
+                                    // Properties for animations
+                                    property bool connecting: obdManager ? 
+                                        (obdManager.get_connection_status() === "Connecting") : false
+                                    property real pulseOpacity: 0.7
+                                    property real connectionProgress: obdManager ? 
+                                        (obdManager._connectionProgress || 0) : 0
+                                    
+                                    // Progress indicator
+                                    Rectangle {
+                                        anchors {
+                                            left: parent.left
+                                            top: parent.top
+                                            bottom: parent.bottom
+                                        }
+                                        width: parent.width * (connectionStatusRect.connectionProgress / 100)
+                                        color: Qt.rgba(1, 1, 1, 0.2)
+                                        radius: parent.radius
+                                        visible: connectionStatusRect.connecting
+                                    }
+                                    
+                                    // Pulse animation
+                                    SequentialAnimation {
+                                        id: pulseAnimation
+                                        running: connectionStatusRect.connecting
+                                        loops: Animation.Infinite
+                                        
+                                        NumberAnimation {
+                                            target: connectionStatusRect
+                                            property: "pulseOpacity"
+                                            from: 0.7
+                                            to: 1.0
+                                            duration: 500
+                                            easing.type: Easing.InOutQuad
+                                        }
+                                        
+                                        NumberAnimation {
+                                            target: connectionStatusRect
+                                            property: "pulseOpacity"
+                                            from: 1.0
+                                            to: 0.7
+                                            duration: 500
+                                            easing.type: Easing.InOutQuad
+                                        }
+                                    }
+                                    
+                                    // Click animation
+                                    SequentialAnimation {
+                                        id: clickAnimation
+                                        
+                                        NumberAnimation {
+                                            target: connectionStatusRect
+                                            property: "scale"
+                                            from: 1.0
+                                            to: 0.95
+                                            duration: 100
+                                            easing.type: Easing.InOutQuad
+                                        }
+                                        
+                                        NumberAnimation {
+                                            target: connectionStatusRect
+                                            property: "scale"
+                                            from: 0.95
+                                            to: 1.0
+                                            duration: 100
+                                            easing.type: Easing.InOutQuad
+                                        }
+                                    }
+                                    
+                                    // Text and spinner layout
+                                    Column {
+                                        anchors.centerIn: parent
+                                        spacing: 2
+                                        
+                                        // Main status row
+                                        Row {
+                                            anchors.horizontalCenter: parent.horizontalCenter
+                                            spacing: 10
+                                            
+                                            // Simple spinner using Rectangle animation
+                                            Rectangle {
+                                                id: spinner
+                                                width: 20
+                                                height: 20
+                                                radius: 10
+                                                color: "transparent"
+                                                border.width: 2
+                                                border.color: "white"
+                                                visible: connectionStatusRect.connecting
+                                                
+                                                // Spinner dot that rotates around
+                                                Rectangle {
+                                                    id: spinnerDot
+                                                    width: 6
+                                                    height: 6
+                                                    radius: 3
+                                                    color: "white"
+                                                    anchors.horizontalCenter: parent.horizontalCenter
+                                                    anchors.top: parent.top
+                                                    anchors.topMargin: -3
+                                                    
+                                                    // Animation
+                                                    RotationAnimation {
+                                                        target: spinner
+                                                        property: "rotation"
+                                                        from: 0
+                                                        to: 360
+                                                        duration: 1200
+                                                        loops: Animation.Infinite
+                                                        running: connectionStatusRect.connecting
+                                                    }
+                                                }
+                                            }
+                                            
+                                            // Status text
+                                            Text {
+                                                id: statusText
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                text: obdManager ? obdManager.get_connection_status() : "Not Connected"
+                                                color: "white"
+                                                font.pixelSize: App.Spacing.overallText
+                                                font.bold: true
+                                                opacity: connectionStatusRect.connecting ? connectionStatusRect.pulseOpacity : 1.0
                                             }
                                         }
+                                        
+                                        // Detailed status text - only shown when available
+                                        Text {
+                                            id: detailText
+                                            anchors.horizontalCenter: parent.horizontalCenter
+                                            text: obdManager && obdManager._connectionDetail ? 
+                                                obdManager._connectionDetail : ""
+                                            color: "white"
+                                            font.pixelSize: App.Spacing.overallText * 0.7
+                                            visible: text !== ""
+                                            opacity: 0.9
+                                        }
+                                    }
+                                    
+                                    // Click handling
+                                    MouseArea {
+                                        id: connectionClickArea
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        
+                                        // Change cursor on hover
+                                        cursorShape: Qt.PointingHandCursor
+                                        
+                                        // Background effect on hover
+                                        Rectangle {
+                                            anchors.fill: parent
+                                            radius: parent.radius
+                                            color: connectionClickArea.containsMouse ? Qt.rgba(1, 1, 1, 0.1) : "transparent"
+                                        }
+                                        
+                                        onClicked: {
+                                            if (obdManager) {
+                                                // Pop up the connection menu
+                                                connectionMenu.popup()
+                                            }
+                                        }
+                                    }
+                                    
+                                    // Connection menu with options
+                                    Menu {
+                                        id: connectionMenu
+                                        
+                                        MenuItem {
+                                            text: "Reconnect"
+                                            onTriggered: {
+                                                if (obdManager) {
+                                                    clickAnimation.start()
+                                                    obdManager.reconnect()
+                                                }
+                                            }
+                                        }
+                                        
+                                        MenuItem {
+                                            text: "Reset Connection"
+                                            onTriggered: {
+                                                if (obdManager) {
+                                                    clickAnimation.start()
+                                                    obdManager.reset_connection()
+                                                }
+                                            }
+                                        }
+                                        
+                                        MenuItem {
+                                            text: "Check Device Presence"
+                                            onTriggered: {
+                                                if (obdManager) {
+                                                    let present = obdManager.check_device_presence()
+                                                    if (present) {
+                                                        deviceFoundNotification.open()
+                                                    } else {
+                                                        deviceNotFoundNotification.open()
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                    
+                                    // Connections to OBD manager
+                                    Connections {
+                                        target: obdManager
+                                        
+                                        function onConnectionStatusChanged(status) {
+                                            connectionStatusRect.connecting = (status === "Connecting")
+                                            connectionTimeoutTimer.stop()
+                                        }
+                                        
+                                        function onConnectionProgressChanged(progress) {
+                                            connectionStatusRect.connectionProgress = progress
+                                        }
+                                        
+                                        function onDevicePresenceChanged(present) {
+                                            if (!present) {
+                                                deviceNotFoundNotification.open()
+                                            }
+                                        }
+                                    }
+                                }
+
+                                // Add notification popups
+                                Popup {
+                                    id: deviceNotFoundNotification
+                                    x: (parent.width - width) / 2
+                                    y: parent.height - height - 20
+                                    width: 300
+                                    height: 60
+                                    modal: false
+                                    focus: true
+                                    closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+                                    
+                                    background: Rectangle {
+                                        color: "#F44336"
+                                        radius: 4
+                                    }
+                                    
+                                    contentItem: Text {
+                                        text: "OBD device not found. Check connections."
+                                        color: "white"
+                                        wrapMode: Text.WordWrap
+                                        font.pixelSize: App.Spacing.overallText
+                                        horizontalAlignment: Text.AlignHCenter
+                                        verticalAlignment: Text.AlignVCenter
+                                    }
+                                    
+                                    enter: Transition {
+                                        NumberAnimation { property: "opacity"; from: 0.0; to: 1.0; duration: 200 }
+                                    }
+                                    
+                                    exit: Transition {
+                                        NumberAnimation { property: "opacity"; from: 1.0; to: 0.0; duration: 200 }
+                                    }
+                                    
+                                    Timer {
+                                        interval: 3000
+                                        running: deviceNotFoundNotification.visible
+                                        onTriggered: deviceNotFoundNotification.close()
+                                    }
+                                }
+
+                                Popup {
+                                    id: deviceFoundNotification
+                                    x: (parent.width - width) / 2
+                                    y: parent.height - height - 20
+                                    width: 300
+                                    height: 60
+                                    modal: false
+                                    focus: true
+                                    closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+                                    
+                                    background: Rectangle {
+                                        color: App.Style.accent
+                                        radius: 4
+                                    }
+                                    
+                                    contentItem: Text {
+                                        text: "OBD device found!"
+                                        color: "white"
+                                        wrapMode: Text.WordWrap
+                                        font.pixelSize: App.Spacing.overallText
+                                        horizontalAlignment: Text.AlignHCenter
+                                        verticalAlignment: Text.AlignVCenter
+                                    }
+                                    
+                                    enter: Transition {
+                                        NumberAnimation { property: "opacity"; from: 0.0; to: 1.0; duration: 200 }
+                                    }
+                                    
+                                    exit: Transition {
+                                        NumberAnimation { property: "opacity"; from: 1.0; to: 0.0; duration: 200 }
+                                    }
+                                    
+                                    Timer {
+                                        interval: 2000
+                                        running: deviceFoundNotification.visible
+                                        onTriggered: deviceFoundNotification.close()
                                     }
                                 }
                                 
                                 SettingDescription {
                                     text: "Click the status bar above to attempt reconnection"
-                                }   
+                                }
                             }
                             
                             SettingsDivider {}
@@ -1447,31 +3018,186 @@ Item {
                             SettingsDivider {}
                             
                             // Fast Mode Toggle
-                            SettingsToggle {
-                                text: "Fast Mode"
+                            ColumnLayout {
                                 Layout.fillWidth: true
-                                checked: settingsManager ? settingsManager.obdFastMode : true
-                                
-                                onToggled: {
-                                    if (settingsManager) {
-                                        settingsManager.save_obd_fast_mode(checked)
+                                spacing: App.Spacing.rowSpacing
+                            
+                                SettingsToggle {
+                                    text: "Fast Mode"
+                                    Layout.fillWidth: true
+                                    checked: settingsManager ? settingsManager.obdFastMode : true
+                                    
+                                    onToggled: {
+                                        if (settingsManager) {
+                                            settingsManager.save_obd_fast_mode(checked)
+                                        }
                                     }
                                 }
-                            }
-                            
-                            SettingDescription {
-                                text: "Fast mode optimizes for quicker updates but may not work with all vehicles"
+                                
+                                SettingDescription {
+                                    text: "Fast mode optimizes for quicker updates but may not work with all vehicles"
+                                }
                             }
                             
                             SettingsDivider {}
                             
-                            // Parameter selection with actual settings values
+                            // Home Screen OBD Display
+                            ColumnLayout {
+                                Layout.fillWidth: true
+                                spacing: App.Spacing.rowSpacing
+                                
+                                SettingLabel {
+                                    text: "Home Screen OBD Display"
+                                }
+                                
+                                SettingDescription {
+                                    text: "Select up to 4 parameters to display on the home screen"
+                                }
+                                
+                                // Current Home Parameters Visual Display - Improved
+                                Rectangle {
+                                    Layout.fillWidth: true
+                                    Layout.preferredHeight: 100
+                                    color: Qt.rgba(App.Style.accent.r, App.Style.accent.g, App.Style.accent.b, 0.1)
+                                    radius: 4
+                                    border.color: App.Style.accent
+                                    border.width: 1
+                                    
+                                    RowLayout {
+                                        anchors.fill: parent
+                                        anchors.margins: 12
+                                        spacing: 12
+                                        
+                                        // Currently selected parameters
+                                        Repeater {
+                                            id: homeParametersRepeater
+                                            model: settingsManager ? settingsManager.get_home_obd_parameters() : []
+                                            
+                                            delegate: Rectangle {
+                                                Layout.fillHeight: true
+                                                Layout.fillWidth: true
+                                                color: Qt.rgba(App.Style.accent.r, App.Style.accent.g, App.Style.accent.b, 0.2)
+                                                radius: 6
+                                                border.color: App.Style.accent
+                                                border.width: 1
+                                                
+                                                // Display name mapping
+                                                property string displayName: {
+                                                    const paramNames = {
+                                                        "SPEED": "Speed",
+                                                        "RPM": "RPM",
+                                                        "COOLANT_TEMP": "Temperature",
+                                                        "CONTROL_MODULE_VOLTAGE": "Voltage",
+                                                        "ENGINE_LOAD": "Load",
+                                                        "THROTTLE_POS": "Throttle",
+                                                        "INTAKE_TEMP": "Intake Temp",
+                                                        "TIMING_ADVANCE": "Timing",
+                                                        "MAF": "Air Flow",
+                                                        "COMMANDED_EQUIV_RATIO": "AFR",
+                                                        "FUEL_LEVEL": "Fuel",
+                                                        "INTAKE_PRESSURE": "MAP",
+                                                        "SHORT_FUEL_TRIM_1": "STFT",
+                                                        "LONG_FUEL_TRIM_1": "LTFT",
+                                                        "O2_B1S1": "O2",
+                                                        "FUEL_PRESSURE": "Fuel Press",
+                                                        "OIL_TEMP": "Oil Temp",
+                                                        "IGNITION_TIMING": "Ignition"
+                                                    };
+                                                    return paramNames[modelData] || modelData;
+                                                }
+                                                
+                                                ColumnLayout {
+                                                    anchors.centerIn: parent
+                                                    spacing: 4
+                                                    
+                                                    // Home icon
+                                                    Text {
+                                                        text: "🏠"
+                                                        font.pixelSize: 20
+                                                        Layout.alignment: Qt.AlignHCenter
+                                                    }
+                                                    
+                                                    // Parameter name
+                                                    Text {
+                                                        text: displayName
+                                                        font.pixelSize: 16
+                                                        color: App.Style.primaryTextColor
+                                                        Layout.alignment: Qt.AlignHCenter
+                                                    }
+                                                }
+                                                
+                                                // Visual feedback on hover
+                                                Rectangle {
+                                                    anchors.fill: parent
+                                                    radius: 6
+                                                    color: removeArea.containsMouse ? Qt.rgba(1, 0, 0, 0.1) : "transparent"
+                                                }
+                                                
+                                                // Remove parameter on click
+                                                MouseArea {
+                                                    id: removeArea
+                                                    anchors.fill: parent
+                                                    hoverEnabled: true
+                                                    onClicked: {
+                                                        removeConfirmDialog.paramToRemove = modelData;
+                                                        removeConfirmDialog.open();
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        
+                                        // Empty slots
+                                        Repeater {
+                                            id: homeParametersEmptyRepeater
+                                            model: Math.max(0, 4 - (settingsManager ? settingsManager.get_home_obd_parameters().length : 0))
+                                            
+                                            delegate: Rectangle {
+                                                Layout.fillHeight: true
+                                                Layout.fillWidth: true
+                                                color: Qt.rgba(App.Style.primaryTextColor.r, App.Style.primaryTextColor.g, App.Style.primaryTextColor.b, 0.05)
+                                                radius: 6
+                                                border.color: Qt.rgba(App.Style.primaryTextColor.r, App.Style.primaryTextColor.g, App.Style.primaryTextColor.b, 0.2)
+                                                border.width: 1
+                                                
+                                                Text {
+                                                    anchors.centerIn: parent
+                                                    text: "Empty"
+                                                    color: Qt.rgba(App.Style.primaryTextColor.r, App.Style.primaryTextColor.g, App.Style.primaryTextColor.b, 0.5)
+                                                    font.pixelSize: 16
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                // Add this right after the home parameters display
+                                Connections {
+                                    target: settingsManager
+                                    function onHomeOBDParametersChanged() {
+                                        // Force refresh home parameters display
+                                        homeParametersRepeater.model = [];
+                                        Qt.callLater(function() {
+                                            if (settingsManager) {
+                                                homeParametersRepeater.model = settingsManager.get_home_obd_parameters();
+                                                homeParametersEmptyRepeater.model = Math.max(0, 4 - (settingsManager ? settingsManager.get_home_obd_parameters().length : 0));
+                                            }
+                                        });
+                                    }
+                                }
+                            }
+                            
+                            SettingsDivider {}
+                            
+                            // Parameter selection section
                             ColumnLayout {
                                 id: parameterSelectionLayout
                                 Layout.fillWidth: true
-                                spacing: App.Spacing.rowSpacing / 2
+                                spacing: App.Spacing.rowSpacing
                                 
-                                // Add a row for the Select All button
+                                SettingLabel {
+                                    text: "OBD Parameters"
+                                }
+                                
+                                // Controls row (Select All button and counter)
                                 RowLayout {
                                     Layout.fillWidth: true
                                     Layout.bottomMargin: 10
@@ -1482,7 +3208,7 @@ Item {
                                         text: "Select All"
                                         implicitHeight: 35
                                         
-                                        // Variable to track if all items are currently selected
+                                        // Track if all items are selected
                                         property bool allSelected: false
                                         
                                         background: Rectangle {
@@ -1501,11 +3227,11 @@ Item {
                                         }
                                         
                                         onClicked: {
-                                            // Toggle between select all and deselect all
+                                            // Toggle select all / deselect all
                                             allSelected = !allSelected;
                                             text = allSelected ? "Deselect All" : "Select All";
                                             
-                                            // Apply the selection to all parameters
+                                            // Apply to all parameters
                                             if (settingsManager) {
                                                 const parameterList = [
                                                     "COOLANT_TEMP", "CONTROL_MODULE_VOLTAGE", "ENGINE_LOAD", 
@@ -1516,7 +3242,6 @@ Item {
                                                     "OIL_TEMP", "IGNITION_TIMING"
                                                 ];
                                                 
-                                                // Update each parameter
                                                 parameterList.forEach(function(param) {
                                                     settingsManager.save_obd_parameter_enabled(param, allSelected);
                                                 });
@@ -1527,14 +3252,14 @@ Item {
                                     // Spacer
                                     Item { Layout.fillWidth: true }
                                     
-                                    // Count of enabled parameters
+                                    // Parameter counter
                                     Text {
                                         id: enabledCount
                                         text: "0 of 0 enabled"
                                         color: App.Style.secondaryTextColor
                                         font.pixelSize: App.Spacing.overallText * 0.9
                                         
-                                        // Function to count enabled parameters
+                                        // Count enabled parameters
                                         function updateEnabledCount() {
                                             if (!settingsManager) return;
                                             
@@ -1556,22 +3281,21 @@ Item {
                                             
                                             enabledCount.text = count + " of " + parameterList.length + " enabled";
                                             
-                                            // Update the select all button state
+                                            // Update select all button state
                                             selectAllButton.allSelected = (count === parameterList.length);
                                             selectAllButton.text = selectAllButton.allSelected ? "Deselect All" : "Select All";
                                         }
                                         
-                                        // Initialize the count
                                         Component.onCompleted: {
                                             updateEnabledCount();
                                         }
                                     }
                                 }
                                 
-                                // Timer for updating the enabled count
+                                // Debounce timer for counter updates
                                 Timer {
                                     id: updateCountTimer
-                                    interval: 250  // 250ms delay to avoid too frequent updates
+                                    interval: 250
                                     running: false
                                     repeat: false
                                     onTriggered: {
@@ -1579,95 +3303,154 @@ Item {
                                     }
                                 }
                                 
-                                // Connection to update from settings changes
+                                // Track settings changes
                                 Connections {
                                     target: settingsManager
                                     function onObdParametersChanged() {
-                                        // Use the timer to prevent multiple rapid updates
                                         updateCountTimer.restart();
                                     }
                                 }
-                                
-                                // Repeater with parameters in a ColumnLayout
-                                ColumnLayout {
+                                                               
+                                // IMPROVED PARAMETER LIST AREA
+                                ListView {
+                                    id: parameterListView
                                     Layout.fillWidth: true
-                                    spacing: 2
+                                    Layout.preferredHeight: Math.min(600, contentHeight)
+                                    clip: true
+                                    spacing: 8  // Increased spacing for better separation
+                                    flickableDirection: Flickable.VerticalFlick
                                     
-                                    Repeater {
-                                        model: [
-                                            // Original parameters
-                                            { name: "Coolant Temperature", command: "COOLANT_TEMP" },
-                                            { name: "System Voltage", command: "CONTROL_MODULE_VOLTAGE" },
-                                            { name: "Engine Load", command: "ENGINE_LOAD" },
-                                            { name: "Throttle Position", command: "THROTTLE_POS" },
-                                            { name: "Intake Temperature", command: "INTAKE_TEMP" },
-                                            { name: "Timing Advance", command: "TIMING_ADVANCE" },
-                                            { name: "Mass Air Flow", command: "MAF" },
-                                            { name: "Vehicle Speed", command: "SPEED" },
-                                            { name: "Engine RPM", command: "RPM" },
-                                            { name: "Air-Fuel Ratio", command: "COMMANDED_EQUIV_RATIO" },
-                                            
-                                            // New parameters (removed fuel economy related)
-                                            { name: "Fuel Level", command: "FUEL_LEVEL" },
-                                            { name: "Intake Manifold Pressure", command: "INTAKE_PRESSURE" },
-                                            { name: "Short Term Fuel Trim", command: "SHORT_FUEL_TRIM_1" },
-                                            { name: "Long Term Fuel Trim", command: "LONG_FUEL_TRIM_1" },
-                                            { name: "O2 Sensor Voltage", command: "O2_B1S1" },
-                                            { name: "Fuel Pressure", command: "FUEL_PRESSURE" },
-                                            { name: "Oil Temperature", command: "OIL_TEMP" },
-                                            { name: "Ignition Timing", command: "IGNITION_TIMING" }
-                                        ]
+                                    // Add a nice scrollbar
+                                    ScrollBar.vertical: ScrollBar {
+                                        active: parameterListView.contentHeight > parameterListView.height
+                                        policy: ScrollBar.AsNeeded
+                                    }
+                                    
+                                    model: [
+                                        // Original parameters
+                                        { name: "Vehicle Speed", command: "SPEED" },
+                                        { name: "Engine RPM", command: "RPM" },
+                                        { name: "Coolant Temperature", command: "COOLANT_TEMP" },
+                                        { name: "System Voltage", command: "CONTROL_MODULE_VOLTAGE" },
+                                        { name: "Engine Load", command: "ENGINE_LOAD" },
+                                        { name: "Throttle Position", command: "THROTTLE_POS" },
+                                        { name: "Intake Temperature", command: "INTAKE_TEMP" },
+                                        { name: "Timing Advance", command: "TIMING_ADVANCE" },
+                                        { name: "Mass Air Flow", command: "MAF" },
+                                        { name: "Air-Fuel Ratio", command: "COMMANDED_EQUIV_RATIO" },
+                                        { name: "Fuel Level", command: "FUEL_LEVEL" },
+                                        { name: "Intake Manifold Pressure", command: "INTAKE_PRESSURE" },
+                                        { name: "Short Term Fuel Trim", command: "SHORT_FUEL_TRIM_1" },
+                                        { name: "Long Term Fuel Trim", command: "LONG_FUEL_TRIM_1" },
+                                        { name: "O2 Sensor Voltage", command: "O2_B1S1" },
+                                        { name: "Fuel Pressure", command: "FUEL_PRESSURE" },
+                                        { name: "Oil Temperature", command: "OIL_TEMP" },
+                                        { name: "Ignition Timing", command: "IGNITION_TIMING" }
+                                    ]
+                                    
+                                    delegate: Rectangle {
+                                        width: parameterListView.width
+                                        height: 60  // Increased height for better touch targets
+                                        color: index % 2 === 0 ? 
+                                            Qt.rgba(App.Style.backgroundColor.r, App.Style.backgroundColor.g, App.Style.backgroundColor.b, 0.3) : 
+                                            "transparent"
+                                        radius: 4
                                         
-                                        delegate: RowLayout {
-                                            required property var modelData
-                                            Layout.fillWidth: true
-                                            spacing: 5
+                                        RowLayout {
+                                            anchors {
+                                                fill: parent
+                                                leftMargin: 8
+                                                rightMargin: 8
+                                            }
+                                            spacing: 10
                                             
-                                            // Use a CheckBox with an explicit ID so we can reference it
-                                            CheckBox {
+                                            // Use our custom checkbox for better touch interaction
+                                            SettingsCheckBox {
                                                 id: paramCheck
                                                 text: modelData.name
                                                 Layout.fillWidth: true
+                                                Layout.preferredWidth: parent.width * 0.7 // Give more space to the checkbox
                                                 
-                                                // Add a property binding so it updates when settings change
-                                                property bool paramEnabled: settingsManager ? 
+                                                // Bind to parameter state
+                                                checked: settingsManager ? 
                                                     settingsManager.get_obd_parameter_enabled(modelData.command, true) : true
                                                 
-                                                // Update checked state immediately when the paramEnabled property changes
-                                                onParamEnabledChanged: {
-                                                    checked = paramEnabled;
-                                                    // Schedule an update of the counter
-                                                    updateCountTimer.restart();
-                                                }
-                                                
-                                                // Initialize with the current value
-                                                Component.onCompleted: {
-                                                    checked = paramEnabled;
-                                                }
-                                                
-                                                contentItem: Text {
-                                                    text: paramCheck.text
-                                                    color: App.Style.primaryTextColor
-                                                    font.pixelSize: App.Spacing.overallText
-                                                    verticalAlignment: Text.AlignVCenter
-                                                    leftPadding: paramCheck.indicator.width + paramCheck.spacing
-                                                    elide: Text.ElideRight
-                                                }
-                                                
+                                                // Save parameter state when toggled
                                                 onToggled: {
                                                     if (settingsManager) {
-                                                        console.log(modelData.command + " monitoring " + (checked ? "enabled" : "disabled"))
-                                                        settingsManager.save_obd_parameter_enabled(modelData.command, checked)
-                                                        // Schedule an update of the counter with a small delay
+                                                        settingsManager.save_obd_parameter_enabled(modelData.command, checked);
                                                         updateCountTimer.restart();
                                                     }
                                                 }
+                                            }
+                                            
+                                            Item {
+                                                // Spacer to push the home button more to the middle
+                                                Layout.preferredWidth: parent.width * 0.1
+                                            }
+                                            
+                                            // Use our custom home button for better touch interaction
+                                            HomeScreenButton {
+                                                id: homeButton
+                                                visible: paramCheck.checked
+                                                Layout.preferredWidth: parent.width * 0.2
                                                 
-                                                // Add a connection to update from settings changes
+                                                // Use a property with a proper change notification
+                                                property bool isOnHomeScreen: false
+                                                
+                                                // Update isActive from isOnHomeScreen
+                                                isActive: isOnHomeScreen
+                                                
+                                                // Function to update the isOnHomeScreen state
+                                                function updateHomeStatus() {
+                                                    if (!settingsManager) return false;
+                                                    let homeParams = settingsManager.get_home_obd_parameters();
+                                                    isOnHomeScreen = homeParams.indexOf(modelData.command) !== -1;
+                                                }
+                                                
+                                                // Initialize on component completion
+                                                Component.onCompleted: {
+                                                    updateHomeStatus();
+                                                }
+                                                
+                                                // Update when home parameters change
                                                 Connections {
                                                     target: settingsManager
-                                                    function onObdParametersChanged() {
-                                                        paramCheck.checked = settingsManager.get_obd_parameter_enabled(modelData.command, true);
+                                                    function onHomeOBDParametersChanged() {
+                                                        homeButton.updateHomeStatus();
+                                                    }
+                                                }
+                                                Connections {
+                                                    target: settingsManager
+                                                    function onHomeOBDParametersChanged() {
+                                                        updateHomeDisplay();
+                                                    }
+                                                }
+                                                
+                                                onClicked: {
+                                                    if (settingsManager) {
+                                                        let homeParams = settingsManager.get_home_obd_parameters();
+                                                        
+                                                        if (isActive) {
+                                                            // Remove from home screen
+                                                            let index = homeParams.indexOf(modelData.command);
+                                                            if (index !== -1) {
+                                                                homeParams.splice(index, 1);
+                                                                settingsManager.save_home_obd_parameters(homeParams);
+                                                                updateHomeDisplay(); // Use the centralized update function
+                                                            }
+                                                        } else {
+                                                            // Add to home screen
+                                                            if (homeParams.length < 4) {
+                                                                homeParams.push(modelData.command);
+                                                                settingsManager.save_home_obd_parameters(homeParams);
+                                                                updateHomeDisplay(); // Use the centralized update function
+                                                            } else {
+                                                                // Show dialog asking which parameter to replace
+                                                                replaceDialog.paramToAdd = modelData.command;
+                                                                replaceDialog.open();
+                                                            }
+                                                        }
                                                     }
                                                 }
                                             }
@@ -1675,9 +3458,8 @@ Item {
                                     }
                                 }
                                 
-                                // Call updateEnabledCount once when component is completed
+                                // Initialize counter on load
                                 Component.onCompleted: {
-                                    // Give a slight delay to allow the UI to initialize
                                     Qt.callLater(function() {
                                         if (enabledCount) {
                                             enabledCount.updateEnabledCount();
@@ -1685,8 +3467,199 @@ Item {
                                     });
                                 }
                             }
+                            
+                            // Bottom spacer
+                            Item { 
+                                Layout.fillHeight: true
+                                Layout.minimumHeight: 20
+                            }
 
-                            Item { Layout.fillHeight: true } // Spacer
+                            function updateHomeDisplay() {
+                                // Force refresh of home parameters display
+                                homeParametersRepeater.model = [];
+                                Qt.callLater(function() {
+                                    if (settingsManager) {
+                                        homeParametersRepeater.model = settingsManager.get_home_obd_parameters();
+                                        homeParametersEmptyRepeater.model = Math.max(0, 4 - (settingsManager ? settingsManager.get_home_obd_parameters().length : 0));
+                                        
+                                        // Also update all home buttons in the parameter list
+                                        for (let i = 0; i < parameterListView.count; i++) {
+                                            let item = parameterListView.itemAtIndex(i);
+                                            if (item && item.homeButton) {
+                                                item.homeButton.updateHomeStatus();
+                                            }
+                                        }
+                                    }
+                                });
+                            }
+                        }
+                    }
+
+                    // Simple dialog for removing parameters - auto-closes immediately after command
+                    Dialog {
+                        id: removeConfirmDialog
+                        title: "Remove Parameter"
+                        width: 300
+                        height: 150
+                        anchors.centerIn: parent
+                        modal: true
+                        
+                        property string paramToRemove: ""
+                        
+                        contentItem: ColumnLayout {
+                            spacing: 10
+                            
+                            Text {
+                                text: "Remove this parameter from the home screen?"
+                                color: App.Style.primaryTextColor
+                                wrapMode: Text.WordWrap
+                                Layout.fillWidth: true
+                            }
+                            
+                            RowLayout {
+                                Layout.alignment: Qt.AlignRight
+                                spacing: 10
+
+                                Button {
+                                    text: "Remove"
+                                    onClicked: {
+                                        if (settingsManager && removeConfirmDialog.paramToRemove) {
+                                            let homeParams = settingsManager.get_home_obd_parameters();
+                                            let index = homeParams.indexOf(removeConfirmDialog.paramToRemove);
+                                            if (index !== -1) {
+                                                homeParams.splice(index, 1);
+                                                settingsManager.save_home_obd_parameters(homeParams);
+                                            }
+                                        }
+                                        removeConfirmDialog.close();
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Replace dialog - improved to show all items without overflow
+                    Dialog {
+                        id: replaceDialog
+                        title: "Home Screen Full"
+                        width: 400
+                        // Adjust height to accommodate all items (4 items of 50px each + header + message + padding)
+                        height: 350
+                        anchors.centerIn: parent
+                        modal: true
+                        
+                        property string paramToAdd: ""
+                        
+                        // Force the dialog to refresh its model when opened
+                        onOpened: {
+                            // Short delay to ensure we get the latest data
+                            Qt.callLater(function() {
+                                currentHomeParamsModel = settingsManager ? settingsManager.get_home_obd_parameters() : [];
+                            });
+                        }
+                        
+                        // Store the current parameters when dialog opens
+                        property var currentHomeParamsModel: []
+                        
+                        contentItem: ColumnLayout {
+                            spacing: 10
+                            
+                            Text {
+                                text: "Your home screen can display up to 4 parameters. Select a parameter to replace:"
+                                color: App.Style.primaryTextColor
+                                wrapMode: Text.WordWrap
+                                Layout.fillWidth: true
+                                Layout.topMargin: 5
+                                Layout.bottomMargin: 5
+                            }
+                            
+                            // Disable scrolling and use fixed layout for consistent display
+                            Item {
+                                Layout.fillWidth: true
+                                // Fixed height to fit all 4 items (4 × 50px)
+                                Layout.preferredHeight: 200
+                                
+                                Column {
+                                    anchors.fill: parent
+                                    spacing: 5
+                                    
+                                    Repeater {
+                                        model: replaceDialog.currentHomeParamsModel
+                                        
+                                        delegate: Rectangle {
+                                            width: parent.width
+                                            height: 45
+                                            color: delegateMouse.containsMouse ? App.Style.hoverColor : "transparent"
+                                            radius: 4
+                                            
+                                            // Parameter display name mapping
+                                            property string displayName: {
+                                                const paramNames = {
+                                                    "SPEED": "Speed",
+                                                    "RPM": "RPM",
+                                                    "COOLANT_TEMP": "Temperature",
+                                                    "CONTROL_MODULE_VOLTAGE": "Voltage",
+                                                    "ENGINE_LOAD": "Load",
+                                                    "THROTTLE_POS": "Throttle",
+                                                    "INTAKE_TEMP": "Intake Temp",
+                                                    "TIMING_ADVANCE": "Timing",
+                                                    "MAF": "Air Flow",
+                                                    "COMMANDED_EQUIV_RATIO": "AFR",
+                                                    "FUEL_LEVEL": "Fuel",
+                                                    "INTAKE_PRESSURE": "MAP",
+                                                    "SHORT_FUEL_TRIM_1": "STFT",
+                                                    "LONG_FUEL_TRIM_1": "LTFT",
+                                                    "O2_B1S1": "O2",
+                                                    "FUEL_PRESSURE": "Fuel Press",
+                                                    "OIL_TEMP": "Oil Temp",
+                                                    "IGNITION_TIMING": "Ignition"
+                                                };
+                                                return paramNames[modelData] || modelData;
+                                            }
+                                            
+                                            RowLayout {
+                                                anchors.fill: parent
+                                                anchors.leftMargin: 10
+                                                anchors.rightMargin: 10
+                                                
+                                                Text {
+                                                    text: "🏠"
+                                                    font.pixelSize: 16
+                                                }
+                                                
+                                                Text {
+                                                    text: displayName
+                                                    color: App.Style.primaryTextColor
+                                                    font.pixelSize: App.Spacing.overallText
+                                                    Layout.fillWidth: true
+                                                }
+                                            }
+                                            
+                                            MouseArea {
+                                                id: delegateMouse
+                                                anchors.fill: parent
+                                                hoverEnabled: true
+                                                onClicked: {
+                                                    if (settingsManager && replaceDialog.paramToAdd) {
+                                                        let homeParams = settingsManager.get_home_obd_parameters();
+                                                        let index = homeParams.indexOf(modelData);
+                                                        if (index !== -1) {
+                                                            homeParams[index] = replaceDialog.paramToAdd;
+                                                            settingsManager.save_home_obd_parameters(homeParams);
+                                                        }
+                                                    }
+                                                    replaceDialog.close();
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            Item {
+                                Layout.fillHeight: true
+                            }
+                            
                         }
                     }
                     
@@ -1801,19 +3774,48 @@ Item {
                                 rowSpacing: App.Spacing.overallSpacing * 2
                                 
                                 // Title with adequate spacing from content
-                                Text {
-                                    id: titleText
-                                    text: "OCTAVE"
-                                    color: App.Style.primaryTextColor
-                                    font.pixelSize: App.Spacing.overallText * 2
-                                    font.bold: true
+                                Item {
                                     Layout.fillWidth: true
+                                    width: parent.width
+                                    height: 100
+
+                                    // Glow "shadow" layer
+                                    Text {
+                                        id: glowText
+                                        text: "OCTAVE"
+                                        font.pixelSize: App.Spacing.overallText * 5
+                                        font.bold: true
+                                        color: App.Style.primaryTextColor
+                                        opacity: 0.5
+                                        anchors.centerIn: parent
+                                        scale: 1.05
+                                        z: 0
+
+                                        // Pulsing animation
+                                        SequentialAnimation on opacity {
+                                            loops: Animation.Infinite
+                                            NumberAnimation { from: 0.3; to: 0.7; duration: 600; easing.type: Easing.InOutQuad }
+                                            NumberAnimation { from: 0.7; to: 0.3; duration: 600; easing.type: Easing.InOutQuad }
+                                        }
+                                    }
+
+                                    // Main text layer
+                                    Text {
+                                        id: titleText
+                                        text: "OCTAVE"
+                                        font.pixelSize: App.Spacing.overallText * 5
+                                        font.bold: true
+                                        color: App.Style.accent
+                                        anchors.centerIn: parent
+                                        z: 1
+                                    }
                                 }
+
                                 
                                 // Version with proper spacing
                                 Text {
                                     id: versionText
-                                    text: "Version 1.0.0"
+                                    text: "Release Candidate 2"
                                     color: App.Style.secondaryTextColor
                                     font.pixelSize: App.Spacing.overallText * 1.2
                                     Layout.fillWidth: true
@@ -1859,7 +3861,7 @@ Item {
                                 }
                                 
                                 Text {
-                                    text: "Copyright © 2024 WayBetterEngineering"
+                                    text: "Copyright © 2025 WayBetterEngineering"
                                     color: App.Style.primaryTextColor
                                     font.pixelSize: App.Spacing.overallText
                                     Layout.fillWidth: true
