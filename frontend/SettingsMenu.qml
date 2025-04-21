@@ -402,9 +402,10 @@ Item {
                 
                 ScrollBar.vertical: ScrollBar {
                     policy: ScrollBar.AsNeeded
+                    width: 0 // Just 1 pixel wide
+                    active: true  // Always active
                     interactive: true
-                    width: 8
-                    anchors.right: parent.right
+                    opacity: 0.2  // Very faint
                 }
             }
         }
@@ -3324,6 +3325,9 @@ Item {
                                     ScrollBar.vertical: ScrollBar {
                                         active: parameterListView.contentHeight > parameterListView.height
                                         policy: ScrollBar.AsNeeded
+                                        width: 1
+                                        opacity: 0.2
+                                        interactive: true
                                     }
                                     
                                     model: [

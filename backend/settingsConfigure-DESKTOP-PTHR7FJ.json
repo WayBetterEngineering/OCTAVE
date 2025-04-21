@@ -1,0 +1,285 @@
+{
+    "deviceName": "OCTAVE",
+    "themeSetting": "Copy of SolarizedLight1trj",
+    "startUpVolume": 0.26,
+    "clockFormat24Hour": false,
+    "showClock": true,
+    "clockSize": 72,
+    "backgroundGrid": "4x4",
+    "screenWidth": 1920,
+    "screenHeight": 1017,
+    "backgroundBlurRadius": 5,
+    "uiScale": 0.7,
+    "obdParameters": {
+        "COOLANT_TEMP": true,
+        "CONTROL_MODULE_VOLTAGE": true,
+        "ENGINE_LOAD": true,
+        "THROTTLE_POS": true,
+        "INTAKE_TEMP": true,
+        "TIMING_ADVANCE": true,
+        "MAF": true,
+        "SPEED": true,
+        "RPM": true,
+        "COMMANDED_EQUIV_RATIO": true,
+        "FUEL_LEVEL": true,
+        "INTAKE_PRESSURE": true,
+        "SHORT_FUEL_TRIM_1": true,
+        "LONG_FUEL_TRIM_1": true,
+        "O2_B1S1": true,
+        "FUEL_PRESSURE": true,
+        "OIL_TEMP": true,
+        "FUEL_ECONOMY": true,
+        "DISTANCE_TO_EMPTY": true,
+        "IGNITION_TIMING": true
+    },
+    "obdBluetoothPort": "/dev/rfcomm0",
+    "obdFastMode": true,
+    "mediaFolder": "C:\\Users\\Redto\\Music",
+    "showBackgroundOverlay": true,
+    "fuelTankCapacity": 19.0,
+    "directoryHistory": [
+        "C:\\Users\\Redto\\Music",
+        "C:\\Users\\Robde\\Music\\The Great Outdoors",
+        "C:\\Users\\Robde\\Music\\Bangers & Mash"
+    ],
+    "homeOBDParameters": [
+        "THROTTLE_POS",
+        "ENGINE_LOAD",
+        "RPM",
+        "SPEED"
+    ],
+    "customThemes": {
+        "Copy of SolarizedLight": {
+            "base": "#FDF6E3",
+            "baseAlt": "#EEE8D5",
+            "accent": "#268BD2",
+            "text": {
+                "primary": "#073642",
+                "secondary": "#586E75"
+            },
+            "states": {
+                "hover": {
+                    "r": 1,
+                    "g": 0.9811856150627136,
+                    "b": 0.921614408493042,
+                    "a": 1,
+                    "hsvHue": 0.12666666507720947,
+                    "hsvSaturation": 0.0783855989575386,
+                    "hsvValue": 1,
+                    "hslHue": 0.12666666507720947,
+                    "hslSaturation": 1,
+                    "hslLightness": 0.9608148336410522,
+                    "valid": true
+                },
+                "paused": {
+                    "r": 1,
+                    "g": 1,
+                    "b": 1,
+                    "a": 1,
+                    "hsvHue": -1,
+                    "hsvSaturation": 0,
+                    "hsvValue": 1,
+                    "hslHue": -1,
+                    "hslSaturation": 0,
+                    "hslLightness": 1,
+                    "valid": true
+                },
+                "playing": {
+                    "r": 1,
+                    "g": 1,
+                    "b": 1,
+                    "a": 1,
+                    "hsvHue": -1,
+                    "hsvSaturation": 0,
+                    "hsvValue": 1,
+                    "hslHue": -1,
+                    "hslSaturation": 0,
+                    "hslLightness": 1,
+                    "valid": true
+                }
+            },
+            "sliders": {
+                "volume": "#ffc107",
+                "media": "#586E75"
+            },
+            "bottombar": {
+                "previous": "#4CAF50",
+                "play": "#4CAF50",
+                "pause": "#4CAF50",
+                "next": "#4CAF50",
+                "volume": "#4CAF50",
+                "shuffle": "#4CAF50",
+                "toggleShade": "#EEE8D5"
+            },
+            "mediaroom": {
+                "previous": "#9C27B0",
+                "play": "#9C27B0",
+                "pause": "#9C27B0",
+                "next": "#9C27B0",
+                "left": "#9C27B0",
+                "right": "#9C27B0",
+                "shuffle": "#9C27B0",
+                "toggleShade": "#EEE8D5"
+            },
+            "mainmenu": {
+                "mediaContainer": "#607D8B"
+            }
+        },
+        "Copy of SolarizedLight1": {
+            "base": "#FDF6E3",
+            "baseAlt": "#EEE8D5",
+            "accent": "#cddc39",
+            "text": {
+                "primary": "#073642",
+                "secondary": "#586E75"
+            },
+            "states": {
+                "hover": "#ffeb3b",
+                "paused": "#673ab7",
+                "playing": "#f44336"
+            },
+            "sliders": {
+                "volume": "#FF9800",
+                "media": "#586E75"
+            },
+            "bottombar": {
+                "previous": "#4CAF50",
+                "play": "#4CAF50",
+                "pause": "#4CAF50",
+                "next": "#4CAF50",
+                "volume": "#4CAF50",
+                "shuffle": "#4CAF50",
+                "toggleShade": "#EEE8D5"
+            },
+            "mediaroom": {
+                "previous": "#9C27B0",
+                "play": "#9C27B0",
+                "pause": "#9C27B0",
+                "next": "#9C27B0",
+                "left": "#9C27B0",
+                "right": "#9C27B0",
+                "shuffle": "#9C27B0",
+                "toggleShade": "#EEE8D5"
+            },
+            "mainmenu": {
+                "mediaContainer": "#607D8B"
+            }
+        },
+        "Copy": {
+            "base": "#FDF6E3",
+            "baseAlt": "#EEE8D5",
+            "accent": "#cddc39",
+            "text": {
+                "primary": "#073642",
+                "secondary": "#586E75"
+            },
+            "states": {
+                "hover": {
+                    "r": 1,
+                    "g": 0.9811856150627136,
+                    "b": 0.921614408493042,
+                    "a": 1,
+                    "hsvHue": 0.12666666507720947,
+                    "hsvSaturation": 0.0783855989575386,
+                    "hsvValue": 1,
+                    "hslHue": 0.12666666507720947,
+                    "hslSaturation": 1,
+                    "hslLightness": 0.9608148336410522,
+                    "valid": true
+                },
+                "paused": {
+                    "r": 1,
+                    "g": 1,
+                    "b": 1,
+                    "a": 1,
+                    "hsvHue": -1,
+                    "hsvSaturation": 0,
+                    "hsvValue": 1,
+                    "hslHue": -1,
+                    "hslSaturation": 0,
+                    "hslLightness": 1,
+                    "valid": true
+                },
+                "playing": {
+                    "r": 1,
+                    "g": 1,
+                    "b": 1,
+                    "a": 1,
+                    "hsvHue": -1,
+                    "hsvSaturation": 0,
+                    "hsvValue": 1,
+                    "hslHue": -1,
+                    "hslSaturation": 0,
+                    "hslLightness": 1,
+                    "valid": true
+                }
+            },
+            "sliders": {
+                "volume": "#FF9800",
+                "media": "#f44336"
+            },
+            "bottombar": {
+                "previous": "#4CAF50",
+                "play": "#4CAF50",
+                "pause": "#4CAF50",
+                "next": "#4CAF50",
+                "volume": "#4CAF50",
+                "shuffle": "#4CAF50",
+                "toggleShade": "#EEE8D5"
+            },
+            "mediaroom": {
+                "previous": "#9C27B0",
+                "play": "#9C27B0",
+                "pause": "#9C27B0",
+                "next": "#9C27B0",
+                "left": "#9C27B0",
+                "right": "#9C27B0",
+                "shuffle": "#9C27B0",
+                "toggleShade": "#EEE8D5"
+            },
+            "mainmenu": {
+                "mediaContainer": "#03a9f4"
+            }
+        },
+        "Copy of SolarizedLight1trj": {
+            "base": "#FDF6E3",
+            "baseAlt": "#EEE8D5",
+            "accent": "#ff5722",
+            "text": {
+                "primary": "#073642",
+                "secondary": "#586E75"
+            },
+            "states": {
+                "hover": "#ffeb3b",
+                "paused": "#673ab7",
+                "playing": "#f44336"
+            },
+            "sliders": {
+                "volume": "#FF9800",
+                "media": "#586E75"
+            },
+            "bottombar": {
+                "previous": "#4CAF50",
+                "play": "#4CAF50",
+                "pause": "#4CAF50",
+                "next": "#4CAF50",
+                "volume": "#4CAF50",
+                "shuffle": "#4CAF50",
+                "toggleShade": "#EEE8D5"
+            },
+            "mediaroom": {
+                "previous": "#9C27B0",
+                "play": "#9C27B0",
+                "pause": "#9C27B0",
+                "next": "#9C27B0",
+                "left": "#9C27B0",
+                "right": "#9C27B0",
+                "shuffle": "#9C27B0",
+                "toggleShade": "#EEE8D5"
+            },
+            "mainmenu": {
+                "mediaContainer": "#607D8B"
+            }
+        }
+    }
+}
