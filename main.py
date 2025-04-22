@@ -6,6 +6,7 @@ from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtCore import QResource
 from PySide6.QtWidgets import QApplication
 
+
 # backend imports
 from backend.clock import Clock
 from backend.settings_manager import SettingsManager

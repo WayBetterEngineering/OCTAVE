@@ -34,10 +34,11 @@
     },
     "obdBluetoothPort": "/dev/rfcomm0",
     "obdFastMode": true,
-    "mediaFolder": "C:\\Users\\Redto\\Music",
+    "mediaFolder": "C:\\Users\\Redto\\OneDrive\\_Projects\\_OCTAVE",
     "showBackgroundOverlay": true,
     "fuelTankCapacity": 19.0,
     "directoryHistory": [
+        "C:\\Users\\Redto\\OneDrive\\_Projects\\_OCTAVE",
         "C:\\Users\\Redto\\Music",
         "C:\\Users\\Robde\\Music\\The Great Outdoors",
         "C:\\Users\\Robde\\Music\\Bangers & Mash"
