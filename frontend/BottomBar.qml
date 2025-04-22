@@ -341,17 +341,35 @@ Rectangle {
                     implicitHeight: App.Spacing.bottomBarVolumeSliderHeight
                     Layout.alignment: Qt.AlignVCenter
                     
-                    Text {
-                        id: volumeText
+                    // Create a container for the volume text
+                    Item {
+                        id: volumeTextContainer
                         anchors {
                             left: parent.left
                             leftMargin: App.Spacing.overallMargin
                             verticalCenter: parent.verticalCenter
                         }
-                        text: volumeControl.currentValue + "%"
-                        color: App.Style.primaryTextColor
-                        font.pixelSize: App.Spacing.bottomBarVolumeText
-                        font.bold: true
+                        // Make the clickable area wider than just the text
+                        width: parent.parent.parent.width
+                        height: parent.parent.parent.height  // Full height of parent
+                        
+                        Text {
+                            id: volumeText
+                            anchors {
+                                left: parent.left
+                                verticalCenter: parent.verticalCenter
+                            }
+                            text: volumeControl.currentValue + "%"
+                            color: App.Style.primaryTextColor
+                            font.pixelSize: App.Spacing.bottomBarVolumeText
+                            font.bold: true
+                        }
+                        
+                        // Add a MouseArea that covers just the text and some padding around it
+                        MouseArea {
+                            anchors.fill: parent
+                            onClicked: popupSlider.open()
+                        }
                     }
                     
                     property int currentValue: 0
@@ -371,11 +389,6 @@ Rectangle {
                         if (mediaManager) {
                             shuffleButton.isShuffleEnabled = mediaManager.is_shuffled()
                         }
-                    }
-                    
-                    MouseArea {
-                        anchors.fill: parent
-                        onClicked: popupSlider.open()
                     }
 
                     Popup {
