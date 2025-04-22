@@ -11,8 +11,10 @@ OCTAVE (Open-source Cross-platform Telematics for Augmented Vehicle Experience) 
 - **Cross-Platform**: Compatible with Windows, Linux, and macOS  
 
 ## Screenshots
-*OCTAVE Media Player with album art and equalizer*  
-*Customizable OBD-II diagnostics dashboard*
+![Home Page](frontend/assets/readme/home_page.png)
+![Media Page](frontend/assets/readme/media_room.png)
+![Equalizer Page](frontend/assets/readme/equalizer_page.png)
+![OBD Page](frontend/assets/readme/obd_page.png)
 
 ## System Requirements
 - **Minimum Screen Resolution**: 800x480 (recommended: 1280x720 or higher)  

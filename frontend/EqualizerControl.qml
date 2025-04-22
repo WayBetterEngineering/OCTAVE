@@ -13,7 +13,6 @@ Item {
     property var frequencies: equalizerManager ? equalizerManager.get_equalizer_frequencies() : []
     property var values: equalizerManager ? equalizerManager.get_equalizer_values() : []
     property var presets: equalizerManager ? equalizerManager.get_available_presets() : []
-    property var builtinPresets: equalizerManager ? equalizerManager.get_builtin_presets() : []
     property string currentPreset: equalizerManager ? equalizerManager.get_current_preset() : "Flat"
 
     property var mediaManager: null
@@ -25,11 +24,8 @@ Item {
     // Visual properties
     property color backgroundColor: "black"
     property color transparentColor: "transparent"
-    property color sliderGradientStart: "#a11212"  // Match your app's accent color
-    property color sliderGradientEnd: "#000000"
-    property real visualizerHeight: height * 0.3
     
-    // Background element with album art blur effect
+    // Background with blur effect
     Rectangle {
         id: backgroundContainer
         anchors.fill: parent
@@ -40,7 +36,6 @@ Item {
         Connections {
             target: mediaManager
             function onCurrentMediaChanged() {
-                // Update background image when song changes
                 backgroundImage.source = mediaManager ? 
                         (mediaManager.get_current_file() ? 
                             mediaManager.get_album_art(mediaManager.get_current_file()) || "./assets/missing_art.png" : 
@@ -60,24 +55,6 @@ Item {
             fillMode: Image.PreserveAspectCrop
             opacity: 0.4
             visible: false
-            
-            // Optional: Add a smooth transition when changing images
-            Behavior on source {
-                SequentialAnimation {
-                    PropertyAnimation {
-                        target: backgroundImage
-                        property: "opacity"
-                        to: 0.0
-                        duration: 300
-                        easing.type: Easing.InOutQuad
-                    }
-                    PropertyAction {
-                        target: backgroundImage
-                        property: "opacity"
-                        value: 0.4
-                    }
-                }
-            }
         }
         
         FastBlur {
@@ -93,11 +70,6 @@ Item {
             anchors.fill: parent
             color: "#B0000000"
             opacity: settingsManager && settingsManager.showBackgroundOverlay ? 1.0 : 0.0
-            
-            // Add behavior for smooth transitions when overlay setting changes
-            Behavior on opacity {
-                NumberAnimation { duration: 300; easing.type: Easing.InOutQuad }
-            }
         }
     }
     
@@ -117,7 +89,7 @@ Item {
                 top: parent.top
                 margins: App.Spacing.overallMargin
             }
-            z: 10 // Ensure it's above other elements
+            z: 10
 
             contentItem: Item {
                 Image {
@@ -142,7 +114,6 @@ Item {
 
             onClicked: stackView.pop()
         }
-
 
         // Main content area
         Rectangle {
@@ -252,58 +223,10 @@ Item {
                             highlighted: presetComboBox.highlightedIndex === index
                         }
                     }
-
-                    Button {
-                        text: "SAVE"
-                        implicitHeight: App.Spacing.overallMargin * 3
-                        implicitWidth: App.Spacing.overallMargin * 8
-                        
-                        background: Rectangle {
-                            color: App.Style.accent
-                            radius: 5
-                        }
-                        
-                        contentItem: Text {
-                            text: parent.text
-                            color: "white"
-                            font.pixelSize: App.Spacing.mediaPlayerTextSize
-                            font.bold: true
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                        
-                        onClicked: {
-                            savePresetDialog.open()
-                        }
-                    }
-
-                    Button {
-                        text: "RESET"
-                        implicitHeight: App.Spacing.overallMargin * 3
-                        implicitWidth: App.Spacing.overallMargin * 8
-                        
-                        background: Rectangle {
-                            color: App.Style.accent
-                            radius: 5
-                        }
-                        
-                        contentItem: Text {
-                            text: parent.text
-                            color: "white"
-                            font.pixelSize: App.Spacing.mediaPlayerTextSize
-                            font.bold: true
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                        
-                        onClicked: {
-                            equalizerManager.apply_preset("Flat")
-                        }
-                    }
                 }
             }
 
-            // System equalizer controls
+            // System equalizer controls - simplified
             Rectangle {
                 id: systemEqContainer
                 anchors {
@@ -396,7 +319,7 @@ Item {
                 }
             }
 
-            // No System Equalizer Warning
+            // No System Equalizer Warning - simplified
             Rectangle {
                 id: noSystemEqContainer
                 anchors {
@@ -425,7 +348,6 @@ Item {
 
                     Item { Layout.fillWidth: true }
 
-                    // In the noSystemEqContainer section
                     Button {
                         text: "Install EasyEffects"
                         implicitHeight: App.Spacing.overallMargin * 3
@@ -462,7 +384,7 @@ Item {
                 }
             }
 
-            // Equalizer sliders
+            // Equalizer sliders - simplified
             Flickable {
                 id: sliderFlickable
                 anchors {
@@ -476,31 +398,6 @@ Item {
                 contentHeight: height
                 clip: true
                 flickableDirection: Flickable.HorizontalFlick
-                
-                // Add fade effect on edges
-                Rectangle {
-                    anchors.left: parent.left
-                    height: parent.height
-                    width: 30
-                    gradient: Gradient {
-                        orientation: Gradient.Horizontal
-                        GradientStop { position: 0.0; color: Qt.rgba(0, 0, 0, 0.8) }
-                        GradientStop { position: 1.0; color: Qt.rgba(0, 0, 0, 0) }
-                    }
-                    z: 1
-                }
-                
-                Rectangle {
-                    anchors.right: parent.right
-                    height: parent.height
-                    width: 30
-                    gradient: Gradient {
-                        orientation: Gradient.Horizontal
-                        GradientStop { position: 0.0; color: Qt.rgba(0, 0, 0, 0) }
-                        GradientStop { position: 1.0; color: Qt.rgba(0, 0, 0, 0.8) }
-                    }
-                    z: 1
-                }
 
                 Row {
                     id: sliderRow
@@ -515,7 +412,7 @@ Item {
                             height: parent.height
                             width: 70
 
-                            // dB labels
+                            // Simplified labels
                             Text {
                                 text: "+12 dB"
                                 color: App.Style.secondaryTextColor
@@ -523,11 +420,11 @@ Item {
                                 anchors.horizontalCenter: parent.horizontalCenter
                             }
 
-                            // Slider
+                            // Simplified slider
                             Slider {
                                 id: bandSlider
                                 orientation: Qt.Vertical
-                                height: parent.height - 150 // Leave room for labels
+                                height: parent.height - 150
                                 width: 60
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 from: 12.0
@@ -544,28 +441,15 @@ Item {
                                     radius: 3
                                     color: bandSlider.enabled ? "#424242" : "#222222"
 
-                                    // Colored portion
+                                    // Colored portion - matched with background
                                     Rectangle {
                                         width: parent.width
                                         height: bandSlider.visualPosition * parent.height
                                         y: bandSlider.height - height
                                         radius: 3
-                                        
-                                        gradient: Gradient {
-                                            orientation: Gradient.Vertical
-                                            GradientStop { 
-                                                position: 0.0
-                                                color: values[index] > 0 ? 
-                                                       (bandSlider.enabled ? Qt.lighter(App.Style.accent, 1.2) : Qt.darker(App.Style.accent, 1.5)) : 
-                                                       (bandSlider.enabled ? "#2979ff" : "#193a77") 
-                                            }
-                                            GradientStop { 
-                                                position: 1.0 
-                                                color: values[index] > 0 ? 
-                                                       (bandSlider.enabled ? App.Style.accent : Qt.darker(App.Style.accent, 1.2)) : 
-                                                       (bandSlider.enabled ? "#1565C0" : "#0d3c76")
-                                            }
-                                        }
+                                        color: values[index] > 0 ? 
+                                               (bandSlider.enabled ? App.Style.accent : Qt.darker(App.Style.accent, 1.2)) : 
+                                               (bandSlider.enabled ? "#2979ff" : "#193a77")
                                     }
                                 }
 
@@ -578,19 +462,8 @@ Item {
                                     color: bandSlider.pressed ? "#666666" : (bandSlider.enabled ? "#808080" : "#505050")
                                     border.color: bandSlider.pressed ? "#ffffff" : (bandSlider.enabled ? "#cccccc" : "#888888")
                                     opacity: bandSlider.enabled ? 1.0 : 0.7
-                                    
-                                    // Drop shadow for better visibility
-                                    layer.enabled: bandSlider.enabled
-                                    layer.effect: DropShadow {
-                                        transparentBorder: true
-                                        horizontalOffset: 2
-                                        verticalOffset: 2
-                                        radius: 8.0
-                                        samples: 17
-                                        color: "#80000000"
-                                    }
 
-                                    // Center line
+                                    // Simple center line
                                     Rectangle {
                                         anchors.centerIn: parent
                                         width: parent.width * 0.6
@@ -612,7 +485,7 @@ Item {
                                     }
                                     
                                     onPressed: function(mouse) {
-                                        mouse.accepted = false  // Allow the Slider to receive the event
+                                        mouse.accepted = false
                                     }
                                 }
                             }
@@ -623,19 +496,9 @@ Item {
                                 height: 2
                                 color: "#cccccc"
                                 anchors.horizontalCenter: parent.horizontalCenter
-                                
-                                // Add a small pulse animation when value is near zero
-                                NumberAnimation on opacity {
-                                    from: 0.6
-                                    to: 1.0
-                                    duration: 1000
-                                    running: Math.abs(values[index]) < 0.5
-                                    loops: Animation.Infinite
-                                    easing.type: Easing.InOutQuad
-                                }
                             }
 
-                            // -12 dB label
+                            // Simplified labels
                             Text {
                                 text: "-12 dB"
                                 color: App.Style.secondaryTextColor
@@ -654,11 +517,11 @@ Item {
                                 anchors.horizontalCenter: parent.horizontalCenter
                             }
 
-                            // Value label
+                            // Value label - simplified
                             Text {
                                 text: values[index].toFixed(1) + " dB"
                                 color: values[index] > 0 ? 
-                                       Qt.lighter(App.Style.accent, 1.3) :
+                                       App.Style.accent :
                                        (values[index] < 0 ? "#2979ff" : App.Style.secondaryTextColor)
                                 font.pixelSize: App.Spacing.mediaPlayerTextSize * 0.8
                                 font.bold: Math.abs(values[index]) > 0.1
@@ -668,7 +531,7 @@ Item {
                     }
                 }
 
-                // Add scrollbar if needed
+                // Simplified scrollbar
                 ScrollBar.horizontal: ScrollBar {
                     active: sliderRow.width > sliderFlickable.width
                     
@@ -684,203 +547,6 @@ Item {
                         radius: height / 2
                         color: App.Style.accent
                         opacity: 0.7
-                    }
-                }
-            }
-        }
-
-        // Save preset dialog
-        Dialog {
-            id: savePresetDialog
-            title: "Save Equalizer Preset"
-            anchors.centerIn: parent
-            width: parent.width * 0.8
-            height: parent.height * 0.3
-            modal: true
-            
-            background: Rectangle {
-                color: Qt.rgba(0.1, 0.1, 0.1, 0.9)
-                radius: 10
-                border.color: App.Style.accent
-                border.width: 1
-            }
-            
-            header: Rectangle {
-                height: App.Spacing.overallMargin * 5
-                color: App.Style.accent
-                radius: 10
-                
-                Text {
-                    text: savePresetDialog.title
-                    color: "white"
-                    font.pixelSize: App.Spacing.mediaPlayerTextSize * 1.2
-                    font.bold: true
-                    anchors.centerIn: parent
-                }
-            }
-
-            contentItem: ColumnLayout {
-                spacing: App.Spacing.overallMargin
-                
-                Text {
-                    text: "Preset Name:"
-                    color: App.Style.primaryTextColor
-                    font.pixelSize: App.Spacing.mediaPlayerTextSize
-                    font.bold: true
-                }
-                
-                TextField {
-                    id: presetNameField
-                    Layout.fillWidth: true
-                    placeholderText: "Enter preset name"
-                    color: App.Style.primaryTextColor
-                    font.pixelSize: App.Spacing.mediaPlayerTextSize
-                    
-                    background: Rectangle {
-                        color: Qt.rgba(0.15, 0.15, 0.15, 1.0)
-                        radius: 5
-                        border.color: App.Style.accent
-                        border.width: 1
-                    }
-                    
-                    // Visual feedback when invalid
-                    Rectangle {
-                        anchors.fill: parent
-                        color: "transparent"
-                        border.color: "red"
-                        border.width: 2
-                        radius: 5
-                        visible: presetNameField.text.trim() === "" || 
-                                 presetNameField.text.trim() === "Custom" ||
-                                 presetNameField.text.trim() === "Flat"
-                        opacity: 0.7
-                    }
-                    
-                    // Show warning text
-                    Text {
-                        anchors {
-                            top: parent.bottom
-                            left: parent.left
-                            topMargin: 5
-                        }
-                        color: "red"
-                        font.pixelSize: App.Spacing.mediaPlayerTextSize * 0.7
-                        text: {
-                            if (presetNameField.text.trim() === "")
-                                return "Preset name cannot be empty"
-                            else if (presetNameField.text.trim() === "Custom" || 
-                                    presetNameField.text.trim() === "Flat")
-                                return "Reserved name, please choose another"
-                            else if (equalizerManager && equalizerManager.is_builtin_preset(presetNameField.text.trim()))
-                                return "Will overwrite built-in preset"
-                            else
-                                return ""
-                        }
-                        visible: text !== ""
-                    }
-                }
-                
-                Item { 
-                    Layout.fillHeight: true 
-                }
-            }
-            
-            footer: DialogButtonBox {
-                background: Rectangle {
-                    color: "transparent"
-                }
-                
-                Button {
-                    text: "SAVE"
-                    DialogButtonBox.buttonRole: DialogButtonBox.AcceptRole
-                    enabled: presetNameField.text.trim() !== "" && 
-                             presetNameField.text.trim() !== "Custom"
-                    
-                    background: Rectangle {
-                        color: parent.enabled ? App.Style.accent : Qt.darker(App.Style.accent, 2.0)
-                        radius: 5
-                    }
-                    
-                    contentItem: Text {
-                        text: parent.text
-                        color: parent.enabled ? "white" : "#aaaaaa"
-                        font.pixelSize: App.Spacing.mediaPlayerTextSize
-                        font.bold: true
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                    }
-                }
-                
-                Button {
-                    text: "CANCEL"
-                    DialogButtonBox.buttonRole: DialogButtonBox.RejectRole
-                    
-                    background: Rectangle {
-                        color: "#666666"
-                        radius: 5
-                    }
-                    
-                    contentItem: Text {
-                        text: parent.text
-                        color: "white"
-                        font.pixelSize: App.Spacing.mediaPlayerTextSize
-                        font.bold: true
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                    }
-                }
-                
-                onAccepted: {
-                    if (presetNameField.text.trim() !== "" && 
-                        presetNameField.text.trim() !== "Custom") {
-                        equalizerManager.save_preset(presetNameField.text.trim())
-                        savePresetDialog.close()
-                        
-                        // Refresh the preset list
-                        presets = equalizerManager.get_available_presets()
-                        currentPreset = equalizerManager.get_current_preset()
-                    }
-                }
-                
-                onRejected: {
-                    savePresetDialog.close()
-                }
-            }
-        }
-        
-        // Context menu for presets
-        Menu {
-            id: presetContextMenu
-            property string selectedPreset: ""
-            
-            background: Rectangle {
-                color: Qt.rgba(0.1, 0.1, 0.1, 0.95)
-                border.color: App.Style.accent
-                border.width: 1
-                radius: 5
-            }
-            
-            MenuItem {
-                text: "Delete Preset"
-                enabled: equalizerManager && !equalizerManager.is_builtin_preset(presetContextMenu.selectedPreset)
-                
-                contentItem: Text {
-                    text: parent.text
-                    color: parent.enabled ? App.Style.primaryTextColor : "#666666"
-                    font.pixelSize: App.Spacing.mediaPlayerTextSize
-                }
-                
-                background: Rectangle {
-                    color: parent.highlighted ? Qt.rgba(0.3, 0.3, 0.3, 0.5) : "transparent"
-                }
-                
-                onTriggered: {
-                    if (equalizerManager) {
-                        equalizerManager.delete_preset(presetContextMenu.selectedPreset)
-                        
-                        // Refresh the preset list
-                        presets = equalizerManager.get_available_presets()
-                        currentPreset = equalizerManager.get_current_preset()
                     }
                 }
             }
@@ -918,12 +584,12 @@ Item {
             }
         }
         
-        // Help dialog
+        // Help dialog - simplified
         Dialog {
             id: helpDialog
             title: "Equalizer Help"
             width: parent.width * 0.8
-            height: parent.height * 0.6
+            height: parent.height * 0.5
             anchors.centerIn: parent
             modal: true
             
@@ -965,23 +631,7 @@ Item {
                     }
                     
                     Text {
-                        text: "This equalizer allows you to adjust audio frequencies to customize your listening experience. It works with system-wide equalizer software for the best audio quality."
-                        color: App.Style.secondaryTextColor
-                        font.pixelSize: App.Spacing.mediaPlayerTextSize
-                        wrapMode: Text.WordWrap
-                        Layout.fillWidth: true
-                    }
-                    
-                    Text {
-                        text: "Presets"
-                        color: App.Style.primaryTextColor
-                        font.pixelSize: App.Spacing.mediaPlayerTextSize * 1.1
-                        font.bold: true
-                        Layout.topMargin: App.Spacing.overallMargin
-                    }
-                    
-                    Text {
-                        text: "Choose from built-in presets optimized for different music genres, or create and save your own custom presets."
+                        text: "This equalizer adjusts audio frequencies to customize your listening experience. Select a preset or adjust bands individually."
                         color: App.Style.secondaryTextColor
                         font.pixelSize: App.Spacing.mediaPlayerTextSize
                         wrapMode: Text.WordWrap
@@ -997,7 +647,7 @@ Item {
                     }
                     
                     Text {
-                        text: "• Low Frequencies (32-125 Hz): Bass, deep sounds\n• Mid Frequencies (250-2000 Hz): Vocals, most instruments\n• High Frequencies (4000-16000 Hz): Cymbals, details"
+                        text: "• Low (32-125 Hz): Bass, deep sounds\n• Mid (250-2000 Hz): Vocals, instruments\n• High (4000-16000 Hz): Cymbals, details"
                         color: App.Style.secondaryTextColor
                         font.pixelSize: App.Spacing.mediaPlayerTextSize
                         wrapMode: Text.WordWrap
@@ -1013,23 +663,7 @@ Item {
                     }
                     
                     Text {
-                        text: "• Double-click any slider to reset it to 0 dB\n• Use subtle adjustments for best results\n• Enable the system equalizer toggle to apply changes"
-                        color: App.Style.secondaryTextColor
-                        font.pixelSize: App.Spacing.mediaPlayerTextSize
-                        wrapMode: Text.WordWrap
-                        Layout.fillWidth: true
-                    }
-                    
-                    Text {
-                        text: "System Requirements"
-                        color: App.Style.primaryTextColor
-                        font.pixelSize: App.Spacing.mediaPlayerTextSize * 1.1
-                        font.bold: true
-                        Layout.topMargin: App.Spacing.overallMargin
-                    }
-
-                    Text {
-                        text: "For best results, please install a system equalizer:\n• Windows: Equalizer APO\n• macOS: eqMac\n• Linux: EasyEffects (with PipeWire audio server)"
+                        text: "• Double-click any slider to reset it to 0 dB\n• Use subtle adjustments for best results\n• Enable the system equalizer to apply changes"
                         color: App.Style.secondaryTextColor
                         font.pixelSize: App.Spacing.mediaPlayerTextSize
                         wrapMode: Text.WordWrap
@@ -1089,15 +723,12 @@ Item {
 
     // Initial setup
     Component.onCompleted: {
-        // If needed, additional one-time setup code
         if (equalizerManager) {
-            // Update UI based on current settings
             values = equalizerManager.get_equalizer_values()
             frequencies = equalizerManager.get_equalizer_frequencies()
             presets = equalizerManager.get_available_presets()
             currentPreset = equalizerManager.get_current_preset()
             
-            // Check system equalizer status
             systemEqualizerAvailable = equalizerManager.is_system_equalizer_available()
             equalizerActive = equalizerManager.is_equalizer_active()
         }

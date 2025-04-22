@@ -1,11 +1,11 @@
 {
     "deviceName": "OCTAVE",
-    "themeSetting": "Dark",
+    "themeSetting": "NightDrive",
     "startUpVolume": 0.16,
     "clockFormat24Hour": false,
     "showClock": true,
     "clockSize": 53,
-    "backgroundGrid": "4x4",
+    "backgroundGrid": "Normal",
     "screenWidth": 1707,
     "screenHeight": 889,
     "backgroundBlurRadius": 15,
@@ -48,46 +48,5 @@
         "RPM",
         "SPEED"
     ],
-    "customThemes": {
-        "Dark": {
-            "base": "#f5f5f5",
-            "baseAlt": "#e5e5e5",
-            "accent": "#212121",
-            "text": {
-                "primary": "#607d8b",
-                "secondary": "#757575"
-            },
-            "states": {
-                "hover": "#fcfcfc",
-                "paused": "#ffffff",
-                "playing": "#ffffff"
-            },
-            "sliders": {
-                "volume": "#FF9800",
-                "media": "#1976D2"
-            },
-            "bottombar": {
-                "previous": "#4CAF50",
-                "play": "#4CAF50",
-                "pause": "#4CAF50",
-                "next": "#4CAF50",
-                "volume": "#4CAF50",
-                "shuffle": "#4CAF50",
-                "toggleShade": "#e5e5e5"
-            },
-            "mediaroom": {
-                "previous": "#9C27B0",
-                "play": "#9C27B0",
-                "pause": "#9C27B0",
-                "next": "#9C27B0",
-                "left": "#9C27B0",
-                "right": "#9C27B0",
-                "shuffle": "#9C27B0",
-                "toggleShade": "#e5e5e5"
-            },
-            "mainmenu": {
-                "mediaContainer": "#607D8B"
-            }
-        }
-    }
+    "customThemes": {}
 }

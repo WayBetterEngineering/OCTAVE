@@ -50,8 +50,170 @@ QtObject {
                 "mediaContainer": "#9d2aa1"
             }
         },
-        // ... other built-in themes
+        "NightDrive": {
+            "base": "#121212",
+            "baseAlt": "#1E1E1E",
+            "accent": "#3F88F2",
+            "text": {
+                "primary": "#FFFFFF",
+                "secondary": "#AAAAAA"
+            },
+            "states": {
+                "hover": "#2A2A2A",
+                "paused": "#252525",
+                "playing": "#303030"
+            },
+            "sliders": {
+                "volume": "#3F88F2",
+                "media": "#AAAAAA"
+            },
+            "bottombar": {
+                "previous": "#3F88F2",
+                "play": "#3F88F2",
+                "pause": "#3F88F2",
+                "next": "#3F88F2",
+                "volume": "#3F88F2",
+                "shuffle": "#3F88F2",
+                "toggleShade": "#2A2A2A"
+            },
+            "mediaroom": {
+                "previous": "#5E9CF3",
+                "play": "#5E9CF3",
+                "pause": "#5E9CF3",
+                "next": "#5E9CF3",
+                "left": "#5E9CF3",
+                "right": "#5E9CF3",
+                "shuffle": "#5E9CF3",
+                "toggleShade": "#252525"
+            },
+            "mainmenu": {
+                "mediaContainer": "#1A3F70"
+            }
+        },
+        "DashboardRed": {
+            "base": "#1A1A1A",
+            "baseAlt": "#252525",
+            "accent": "#E53935",
+            "text": {
+                "primary": "#FFFFFF",
+                "secondary": "#B0B0B0"
+            },
+            "states": {
+                "hover": "#2F2F2F",
+                "paused": "#2A2A2A",
+                "playing": "#353535"
+            },
+            "sliders": {
+                "volume": "#E53935",
+                "media": "#B0B0B0"
+            },
+            "bottombar": {
+                "previous": "#E53935",
+                "play": "#E53935",
+                "pause": "#E53935",
+                "next": "#E53935",
+                "volume": "#E53935",
+                "shuffle": "#E53935",
+                "toggleShade": "#2F2F2F"
+            },
+            "mediaroom": {
+                "previous": "#F05545",
+                "play": "#F05545",
+                "pause": "#F05545",
+                "next": "#F05545",
+                "left": "#F05545",
+                "right": "#F05545",
+                "shuffle": "#F05545",
+                "toggleShade": "#2A2A2A"
+            },
+            "mainmenu": {
+                "mediaContainer": "#7A1F1D"
+            }
+        },
+        "EcoGreen": {
+            "base": "#FAFAFA",
+            "baseAlt": "#F0F0F0",
+            "accent": "#43A047",
+            "text": {
+                "primary": "#212121",
+                "secondary": "#757575"
+            },
+            "states": {
+                "hover": "#E0E0E0",
+                "paused": "#DBDBDB",
+                "playing": "#D6D6D6"
+            },
+            "sliders": {
+                "volume": "#43A047",
+                "media": "#757575"
+            },
+            "bottombar": {
+                "previous": "#43A047",
+                "play": "#43A047",
+                "pause": "#43A047",
+                "next": "#43A047",
+                "volume": "#43A047",
+                "shuffle": "#43A047",
+                "toggleShade": "#E0E0E0"
+            },
+            "mediaroom": {
+                "previous": "#66BB6A",
+                "play": "#66BB6A",
+                "pause": "#66BB6A",
+                "next": "#66BB6A",
+                "left": "#66BB6A",
+                "right": "#66BB6A",
+                "shuffle": "#66BB6A",
+                "toggleShade": "#DBDBDB"
+            },
+            "mainmenu": {
+                "mediaContainer": "#2E7D32"
+            }
+        },
+        "ElectricBlue": {
+            "base": "#ECEFF1",
+            "baseAlt": "#CFD8DC",
+            "accent": "#0277BD",
+            "text": {
+                "primary": "#263238",
+                "secondary": "#546E7A"
+            },
+            "states": {
+                "hover": "#B0BEC5",
+                "paused": "#A7B4BC",
+                "playing": "#9EA7AC"
+            },
+            "sliders": {
+                "volume": "#0277BD",
+                "media": "#546E7A"
+            },
+            "bottombar": {
+                "previous": "#0277BD",
+                "play": "#0277BD",
+                "pause": "#0277BD",
+                "next": "#0277BD",
+                "volume": "#0277BD",
+                "shuffle": "#0277BD",
+                "toggleShade": "#B0BEC5"
+            },
+            "mediaroom": {
+                "previous": "#039BE5",
+                "play": "#039BE5",
+                "pause": "#039BE5",
+                "next": "#039BE5",
+                "left": "#039BE5",
+                "right": "#039BE5",
+                "shuffle": "#039BE5",
+                "toggleShade": "#A7B4BC"
+            },
+            "mainmenu": {
+                "mediaContainer": "#01579B"
+            }
+        }
     })
+
+    // Rest of the file remains unchanged
+    // ...
 
     // Helper function to get current theme
     function getCurrentTheme() {

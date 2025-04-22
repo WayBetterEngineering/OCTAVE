@@ -95,8 +95,8 @@ QtObject {
     property real mediaRoomMetaDataAlbumTextPercent: .05
     
     // Media room artwork
-    property real mediaRoomAlbumArtHeightPercent: .5
-    property real mediaRoomAlbumArtWidthPercent: .5
+    property real mediaRoomAlbumArtHeightPercent: .6
+    property real mediaRoomAlbumArtWidthPercent: .6
     
     // Media room progress and duration
     property real mediaRoomDurationBarHeightPercent: .1
