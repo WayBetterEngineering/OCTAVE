@@ -398,12 +398,15 @@ class MediaManager(QObject):
             
     @Slot(result=str)
     def get_current_file(self):
+        
         """Get currently playing file without auto-playing"""
         # Initialize playlist if empty
         if not self._current_playlist:
             files = self.get_media_files()
             if files:
-                self._current_playlist = sorted(files)
+                # Sort files alphabetically but ignore special characters
+                import re
+                self._current_playlist = sorted(files, key=lambda x: re.sub(r'[^\w\s]|_', '', x.lower()))
                 self._current_index = 0
                 # Return the first file but don't play it
                 return files[0]
@@ -413,14 +416,15 @@ class MediaManager(QObject):
             return self._current_playlist[self._current_index]
         
         # Fallback to first file if index is invalid
-        files = sorted(self.get_media_files())
+        files = self.get_media_files()
         if files:
-            self._current_playlist = files
+            # Sort files alphabetically but ignore special characters
+            import re
+            self._current_playlist = sorted(files, key=lambda x: re.sub(r'[^\w\s]|_', '', x.lower()))
             self._current_index = 0
             return files[0]
             
         return ""
-            
     @Slot(str)
     def play_file(self, filename):
         """Play specified file"""
@@ -685,7 +689,6 @@ class MediaManager(QObject):
             # Connect to future changes
             self._settings_manager.mediaFolderChanged.connect(self.update_media_directory)
             
-    @Slot(str)
     def update_media_directory(self, directory):
         if os.path.exists(directory) and os.path.isdir(directory):
             old_dir = self.media_dir
@@ -720,6 +723,39 @@ class MediaManager(QObject):
                         self._audio_processor.stop()
         else:
             print(f"Warning: Directory {directory} does not exist or is not a directory")
+            if os.path.exists(directory) and os.path.isdir(directory):
+                old_dir = self.media_dir
+                self.media_dir = directory
+                print(f"Media directory changed from {old_dir} to {self.media_dir}")
+                
+                # Clear caches that depend on the previous directory
+                self._metadata_cache = {}
+                self._album_art_cache = {}
+                self._access_count = {}
+                
+                # Refresh media files
+                self.get_media_files()
+                
+                # If currently playing, try to continue with same file or reset
+                current_file = self.get_current_file()
+                if self._is_playing and current_file and os.path.exists(os.path.join(self.media_dir, current_file)):
+                    self.play_file(current_file)
+                elif self._is_playing:
+                    # Was playing but file not in new directory - play first available file
+                    files = self.get_media_files()
+                    if files:
+                        self.play_file(files[0])
+                    else:
+                        self._player.stop()
+                        self._is_playing = False
+                        self._is_paused = True
+                        self.playStateChanged.emit(False)
+                        
+                        # Stop audio processor if needed
+                        if self._equalizer_active and hasattr(self, '_audio_processor') and self._audio_processor:
+                            self._audio_processor.stop()
+            else:
+                print(f"Warning: Directory {directory} does not exist or is not a directory")
             
     @Slot(result=str)
     def get_default_media_dir(self):

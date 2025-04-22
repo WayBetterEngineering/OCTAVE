@@ -35,16 +35,30 @@ Item {
         
         if (currentSortColumn === "title") {
             sortedFiles.sort((a, b) => {
-                const titleA = a.replace('.mp3', '').toLowerCase()
-                const titleB = b.replace('.mp3', '').toLowerCase()
+                // Remove special characters and file extension for comparison
+                const titleA = a.replace('.mp3', '')
+                    .toLowerCase()
+                    .replace(/[^\w\s]|_/g, '')
+                    .trim()
+                const titleB = b.replace('.mp3', '')
+                    .toLowerCase()
+                    .replace(/[^\w\s]|_/g, '')
+                    .trim()
                 return sortByTitleAscending ? 
                     titleA.localeCompare(titleB) : 
                     titleB.localeCompare(titleA)
             })
         } else if (currentSortColumn === "album") {
             sortedFiles.sort((a, b) => {
-                const albumA = (mediaManager ? mediaManager.get_album(a) : "").toLowerCase()
-                const albumB = (mediaManager ? mediaManager.get_album(b) : "").toLowerCase()
+                // Remove special characters from album names for comparison
+                const albumA = (mediaManager ? mediaManager.get_album(a) : "")
+                    .toLowerCase()
+                    .replace(/[^\w\s]|_/g, '')
+                    .trim()
+                const albumB = (mediaManager ? mediaManager.get_album(b) : "")
+                    .toLowerCase()
+                    .replace(/[^\w\s]|_/g, '')
+                    .trim()
                 return sortByAlbumAscending ? 
                     albumA.localeCompare(albumB) : 
                     albumB.localeCompare(albumA)
@@ -559,7 +573,7 @@ Item {
                             // Click behavior for list items
                             MouseArea {
                                 anchors.fill: parent
-                                hoverEnabled: true
+                                hoverEnabled: false
                                 onClicked: {
                                     if (mediaManager) {
                                         mediaManager.play_file(modelData)

@@ -567,13 +567,26 @@ Rectangle {
                         border.width: 1
                     }
                     
-                    contentItem: Text {
-                        text: "Home"
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                        color: App.Style.primaryTextColor
-                        font.pixelSize: App.Spacing.overallText
-                        font.bold: true
+                    contentItem: Item {
+                        Image {
+                            id: homeButtonImage
+                            anchors.centerIn: parent
+                            width: parent.width * 0.7
+                            height: parent.height * 0.7
+                            source: "./assets/home_button.svg"
+                            sourceSize: Qt.size(width * 2, height * 2)
+                            fillMode: Image.PreserveAspectFit
+                            smooth: true
+                            antialiasing: true
+                            mipmap: true
+                            visible: false
+                        }
+                        
+                        ColorOverlay {
+                            anchors.fill: homeButtonImage
+                            source: homeButtonImage
+                            color: App.Style.primaryTextColor
+                        }
                     }
                     
                     MouseArea {
@@ -618,13 +631,26 @@ Rectangle {
                         border.width: 1
                     }
                     
-                    contentItem: Text {
-                        text: "OBD"
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                        color: App.Style.primaryTextColor
-                        font.pixelSize: App.Spacing.overallText
-                        font.bold: true
+                    contentItem: Item {
+                        Image {
+                            id: obdButtonImage
+                            anchors.centerIn: parent
+                            width: parent.width * 0.7
+                            height: parent.height * 0.7
+                            source: "./assets/obd_button.svg"
+                            sourceSize: Qt.size(width * 2, height * 2)
+                            fillMode: Image.PreserveAspectFit
+                            smooth: true
+                            antialiasing: true
+                            mipmap: true
+                            visible: false
+                        }
+                        
+                        ColorOverlay {
+                            anchors.fill: obdButtonImage
+                            source: obdButtonImage
+                            color: App.Style.primaryTextColor
+                        }
                     }
                     
                     MouseArea {
@@ -675,13 +701,26 @@ Rectangle {
                         border.width: 1
                     }
                     
-                    contentItem: Text {
-                        text: "Media"
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                        color: App.Style.primaryTextColor
-                        font.pixelSize: App.Spacing.overallText
-                        font.bold: true
+                    contentItem: Item {
+                        Image {
+                            id: mediaButtonImage
+                            anchors.centerIn: parent
+                            width: parent.width * 0.7
+                            height: parent.height * 0.7
+                            source: "./assets/media_button.svg"
+                            sourceSize: Qt.size(width * 2, height * 2)
+                            fillMode: Image.PreserveAspectFit
+                            smooth: true
+                            antialiasing: true
+                            mipmap: true
+                            visible: false
+                        }
+                        
+                        ColorOverlay {
+                            anchors.fill: mediaButtonImage
+                            source: mediaButtonImage
+                            color: App.Style.primaryTextColor
+                        }
                     }
                     
                     MouseArea {
@@ -726,13 +765,26 @@ Rectangle {
                         border.width: 1
                     }
                     
-                    contentItem: Text {
-                        text: "Settings"
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                        color: App.Style.primaryTextColor
-                        font.pixelSize: App.Spacing.overallText
-                        font.bold: true
+                    contentItem: Item {
+                        Image {
+                            id: settingsButtonImage
+                            anchors.centerIn: parent
+                            width: parent.width * 0.7
+                            height: parent.height * 0.7
+                            source: "./assets/settings_button.svg"
+                            sourceSize: Qt.size(width * 2, height * 2)
+                            fillMode: Image.PreserveAspectFit
+                            smooth: true
+                            antialiasing: true
+                            mipmap: true
+                            visible: false
+                        }
+                        
+                        ColorOverlay {
+                            anchors.fill: settingsButtonImage
+                            source: settingsButtonImage
+                            color: App.Style.primaryTextColor
+                        }
                     }
                     
                     MouseArea {

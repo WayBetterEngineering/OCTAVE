@@ -23,7 +23,11 @@ class SVGManager(QObject):
             "mute_off_med.svg",
             "mute_off_high.svg",
             "left_arrow.svg",      
-            "right_arrow.svg"      
+            "right_arrow.svg",
+            "home_button.svg",
+            "obd_button.svg",
+            "media_button.svg",
+            "settings_button.svg"
         ]
 
         for svg_name in svg_files:
