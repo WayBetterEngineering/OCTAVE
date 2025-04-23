@@ -1,13 +1,13 @@
 {
     "deviceName": "OCTAVE",
-    "themeSetting": "CosmicVoyager",
+    "themeSetting": "QuantumNebula",
     "startUpVolume": 0.33,
     "clockFormat24Hour": false,
     "showClock": true,
     "clockSize": 63,
     "backgroundGrid": "Normal",
-    "screenWidth": 1707,
-    "screenHeight": 889,
+    "screenWidth": 1357,
+    "screenHeight": 687,
     "backgroundBlurRadius": 40,
     "uiScale": 0.75,
     "obdParameters": {
@@ -34,7 +34,7 @@
     },
     "obdBluetoothPort": "/dev/rfcomm0",
     "obdFastMode": true,
-    "mediaFolder": "C:\\Users\\Robde\\Music\\Bangers & Mash",
+    "mediaFolder": "C:\\Users\\Redto\\Music",
     "showBackgroundOverlay": true,
     "fuelTankCapacity": 19.0,
     "directoryHistory": [

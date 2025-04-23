@@ -144,7 +144,83 @@ Item {
                             maximumLineCount: 2
                             wrapMode: Text.WordWrap
                         }
+                        
+                        // Duration/seek bar
+                        Rectangle {
+                            id: miniSeekBarContainer
+                            Layout.fillWidth: true
+                            height: 40
+                            color: "transparent"
+                            
+                            RowLayout {
+                                anchors.fill: parent
+                                spacing: 5
+                                
+                                Text {
+                                    id: miniPositionText
+                                    text: "0:00"
+                                    color: App.Style.secondaryTextColor
+                                    font.pixelSize: 12
+                                }
+                                
+                                Slider {
+                                    id: miniProgressSlider
+                                    Layout.fillWidth: true
+                                    from: 0
+                                    to: 1
+                                    value: 0
+                                    enabled: mediaManager && mediaManager.get_duration() > 0
+                                    
+                                    property bool userSeeking: false
+                                    
+                                    background: Rectangle {
+                                        x: miniProgressSlider.leftPadding
+                                        y: miniProgressSlider.topPadding + miniProgressSlider.availableHeight / 2 - height / 2
+                                        width: miniProgressSlider.availableWidth
+                                        height: 4
+                                        radius: 2
+                                        color: App.Style.secondaryTextColor
+                                        
+                                        Rectangle {
+                                            width: miniProgressSlider.visualPosition * parent.width
+                                            height: parent.height
+                                            radius: 2
+                                            color: App.Style.accent
+                                        }
+                                    }
+                                    
+                                    handle: Rectangle {
+                                        x: miniProgressSlider.leftPadding + miniProgressSlider.visualPosition * (miniProgressSlider.availableWidth - width)
+                                        y: miniProgressSlider.topPadding + miniProgressSlider.availableHeight / 2 - height / 2
+                                        width: 12
+                                        height: 12
+                                        radius: 6
+                                        color: miniProgressSlider.pressed ? "#666666" : "#808080"
+                                        visible: true
+                                    }
+                                    
+                                    onPressedChanged: {
+                                        if (pressed) {
+                                            userSeeking = true;
+                                        } else {
+                                            userSeeking = false;
+                                            if (mediaManager) {
+                                                mediaManager.set_position(value);
+                                            }
+                                        }
+                                    }
+                                }
+                                
+                                Text {
+                                    id: miniDurationText
+                                    text: "0:00"
+                                    color: App.Style.secondaryTextColor
+                                    font.pixelSize: 12
+                                }
+                            }
+                        }
                     }
+
 
                     // Function to update media information
                     function updateMedia() {
@@ -251,6 +327,52 @@ Item {
             mediaContentArea.currentTitle = title;
             mediaContentArea.currentArtist = artist;
             mediaContentArea.currentAlbum = album;
+        }
+    }
+
+    // Media Connections - consolidate into one section
+    Connections {
+        target: mediaManager
+        
+        function onMetadataChanged(title, artist, album) {
+            mediaContentArea.updateMedia();
+            mediaContentArea.currentTitle = title;
+            mediaContentArea.currentArtist = artist;
+            mediaContentArea.currentAlbum = album;
+        }
+        
+        function onPositionChanged(position) {
+            if (!miniProgressSlider.userSeeking) {
+                miniProgressSlider.value = position;
+                
+                // Format and update position text
+                var minutes = Math.floor(position / 60000);
+                var seconds = Math.floor((position % 60000) / 1000);
+                miniPositionText.text = minutes + ":" + (seconds < 10 ? "0" : "") + seconds;
+            }
+        }
+        
+        function onDurationChanged(duration) {
+            miniProgressSlider.to = duration > 0 ? duration : 1;
+            
+            // Format and update duration text
+            var minutes = Math.floor(duration / 60000);
+            var seconds = Math.floor((duration % 60000) / 1000);
+            miniDurationText.text = minutes + ":" + (seconds < 10 ? "0" : "") + seconds;
+        }
+        
+        function onCurrentMediaChanged(filename) {
+            // Update time displays when media changes
+            if (mediaManager) {
+                // Update duration
+                var duration = mediaManager.get_duration();
+                var durationMinutes = Math.floor(duration / 60000);
+                var durationSeconds = Math.floor((duration % 60000) / 1000);
+                miniDurationText.text = durationMinutes + ":" + (durationSeconds < 10 ? "0" : "") + durationSeconds;
+                
+                // Reset position to 0
+                miniPositionText.text = "0:00";
+            }
         }
     }
 
