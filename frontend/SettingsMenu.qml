@@ -40,7 +40,8 @@ Item {
         // Slightly increase the implicit height for more touch area without changing appearance
         implicitHeight: App.Spacing.overallSliderHeight * 2.5
         
-        property color activeColor: App.Style.accent
+        // Use the new settingsSliderColor property
+        property color activeColor: App.Style.settingsSliderColor
         property double visualValue: value
         property string valueDisplay: ""
         
@@ -948,7 +949,6 @@ Item {
                                     // Save directory button
                                     Button {
                                         id: saveDirectoryButton
-                                        text: "Save"
                                         Layout.preferredWidth: 80
                                         implicitHeight: mediaFolderField.height
                                         
@@ -960,13 +960,23 @@ Item {
                                             border.color: Qt.darker(App.Style.accent, 1.3)
                                         }
                                         
-                                        contentItem: Text {
-                                            text: parent.text
-                                            color: "white"
-                                            font.pixelSize: App.Spacing.overallText * 0.9
-                                            font.bold: true
-                                            horizontalAlignment: Text.AlignHCenter
-                                            verticalAlignment: Text.AlignVCenter
+                                        contentItem: Item {
+                                            anchors.fill: parent
+                                            
+                                            Image {
+                                                id: saveIcon
+                                                source: "assets/save_button.svg"
+                                                sourceSize.width: 24
+                                                sourceSize.height: 24
+                                                anchors.centerIn: parent
+                                                
+                                                // Optional: Add color overlay to tint the SVG to match button text color
+                                                ColorOverlay {
+                                                    anchors.fill: parent
+                                                    source: parent
+                                                    color: "white"
+                                                }
+                                            }
                                         }
                                         
                                         ToolTip.visible: hovered
@@ -983,7 +993,6 @@ Item {
                                     // Delete current folder button - Always visible if text field has content
                                     Button {
                                         id: deleteCurrentButton
-                                        text: "Delete"
                                         Layout.preferredWidth: 80
                                         implicitHeight: mediaFolderField.height
                                         visible: mediaFolderField.text.trim() !== ""
@@ -996,13 +1005,23 @@ Item {
                                             border.color: Qt.darker("#ff6666", 1.3)
                                         }
                                         
-                                        contentItem: Text {
-                                            text: parent.text
-                                            color: "white"
-                                            font.pixelSize: App.Spacing.overallText * 0.9
-                                            font.bold: true
-                                            horizontalAlignment: Text.AlignHCenter
-                                            verticalAlignment: Text.AlignVCenter
+                                        contentItem: Item {
+                                            anchors.fill: parent
+                                            
+                                            Image {
+                                                id: deleteIcon
+                                                source: "assets/delete_button.svg"
+                                                sourceSize.width: 24
+                                                sourceSize.height: 24
+                                                anchors.centerIn: parent
+                                                
+                                                // Optional: Add color overlay to tint the SVG to match button text color
+                                                ColorOverlay {
+                                                    anchors.fill: parent
+                                                    source: parent
+                                                    color: "white"
+                                                }
+                                            }
                                         }
                                         
                                         ToolTip.visible: hovered

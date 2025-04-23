@@ -598,7 +598,7 @@ Rectangle {
                         ColorOverlay {
                             anchors.fill: homeButtonImage
                             source: homeButtonImage
-                            color: App.Style.primaryTextColor
+                            color: App.Style.bottomBarHomeButton
                         }
                     }
                     
@@ -662,7 +662,7 @@ Rectangle {
                         ColorOverlay {
                             anchors.fill: obdButtonImage
                             source: obdButtonImage
-                            color: App.Style.primaryTextColor
+                            color: App.Style.bottomBarOBDButton
                         }
                     }
                     
@@ -732,7 +732,7 @@ Rectangle {
                         ColorOverlay {
                             anchors.fill: mediaButtonImage
                             source: mediaButtonImage
-                            color: App.Style.primaryTextColor
+                            color: App.Style.bottomBarMediaButton
                         }
                     }
                     
@@ -796,7 +796,7 @@ Rectangle {
                         ColorOverlay {
                             anchors.fill: settingsButtonImage
                             source: settingsButtonImage
-                            color: App.Style.primaryTextColor
+                            color: App.Style.bottomBarSettingsButton
                         }
                     }
                     

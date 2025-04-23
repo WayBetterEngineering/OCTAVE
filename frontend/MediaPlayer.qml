@@ -20,7 +20,8 @@ Item {
     // Sorting properties
     property bool sortByTitleAscending: true
     property bool sortByAlbumAscending: true
-    property string currentSortColumn: "title" // Can be "title", "album", or "none"
+    property bool sortByArtistAscending: true
+    property string currentSortColumn: "title" // Can be "title", "album", "artist", or "none"
 
     // Statistics cache
     property var statsCache: ({
@@ -62,6 +63,21 @@ Item {
                 return sortByAlbumAscending ? 
                     albumA.localeCompare(albumB) : 
                     albumB.localeCompare(albumA)
+            })
+        } else if (currentSortColumn === "artist") {
+            sortedFiles.sort((a, b) => {
+                // Remove special characters from artist names for comparison
+                const artistA = (mediaManager ? mediaManager.get_band(a) : "")
+                    .toLowerCase()
+                    .replace(/[^\w\s]|_/g, '')
+                    .trim()
+                const artistB = (mediaManager ? mediaManager.get_band(b) : "")
+                    .toLowerCase()
+                    .replace(/[^\w\s]|_/g, '')
+                    .trim()
+                return sortByArtistAscending ? 
+                    artistA.localeCompare(artistB) : 
+                    artistB.localeCompare(artistA)
             })
         }
         
@@ -376,12 +392,12 @@ Item {
                             color: App.Style.headerTextColor
                             font.pixelSize: App.Spacing.mediaPlayerTextSize
                             font.bold: true
-                            Layout.preferredWidth: parent.width * App.Spacing.mediaPlayerIndexColumnWidthPercent
+                            Layout.preferredWidth: parent.width * 0.05 // 5% for index column
                         }
 
                         // Title header with sort functionality
                         Item {
-                            Layout.preferredWidth: parent.width * App.Spacing.mediaPlayerTitleColumnWidthPercent
+                            Layout.preferredWidth: parent.width * 0.35 // 35% for title column
                             Layout.fillHeight: true
 
                             MouseArea {
@@ -407,9 +423,37 @@ Item {
                             }
                         }
 
+                        // Artist header with sort functionality
+                        Item {
+                            Layout.preferredWidth: parent.width * 0.3 // 30% for artist column
+                            Layout.fillHeight: true
+
+                            MouseArea {
+                                anchors.fill: parent
+                                onClicked: {
+                                    if (currentSortColumn === "artist") {
+                                        sortByArtistAscending = !sortByArtistAscending
+                                    } else {
+                                        currentSortColumn = "artist"
+                                        sortByArtistAscending = true
+                                    }
+                                    sortMediaFiles()
+                                }
+                            }
+
+                            Text {
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: "Artist " + (currentSortColumn === "artist" ? 
+                                    (sortByArtistAscending ? "↑" : "↓") : "")
+                                color: App.Style.headerTextColor
+                                font.pixelSize: App.Spacing.mediaPlayerTextSize
+                                font.bold: true
+                            }
+                        }
+
                         // Album header with sort functionality
                         Item {
-                            Layout.preferredWidth: parent.width * App.Spacing.mediaPlayerAlbumColumnWidthPercent
+                            Layout.preferredWidth: parent.width * 0.3 // 30% for album column
                             Layout.fillHeight: true
 
                             MouseArea {
@@ -478,70 +522,50 @@ Item {
 
                                 // Index column
                                 Text {
-                                    Layout.preferredWidth: parent.width * App.Spacing.mediaPlayerIndexColumnWidthPercent
+                                    Layout.preferredWidth: parent.width * 0.05 // 5% for index column
                                     text: (index + 1).toString()
                                     color: App.Style.secondaryTextColor
                                     font.pixelSize: App.Spacing.mediaPlayerSecondaryTextSize
                                     horizontalAlignment: Text.AlignLeft
                                 }
 
-                                // Album art
-                                LazyImage {
-                                    Layout.preferredWidth: App.Spacing.mediaPlayerAlbumArtSize
-                                    Layout.preferredHeight: App.Spacing.mediaPlayerAlbumArtSize
-                                    fidelity: 120
-                                    smoothing: true
-                                    mipmap: true
-                                    antialiasing: true
-                                    quality: 0.7
-                                    source: visible ? 
-                                        (mediaManager ? 
-                                            mediaManager.get_album_art(modelData) || 
-                                            "./assets/missing_art.jpg" : 
-                                            "./assets/missing_art.jpg") : 
-                                        ""
-                                }
+                                // Title section (with album art)
+                                RowLayout {
+                                    Layout.preferredWidth: parent.width * 0.35 // 35% for title column
+                                    spacing: App.Spacing.overallMargin * 2
 
-                                // Title and artist info
-                                ColumnLayout {
-                                    Layout.preferredWidth: parent.width * 
-                                        App.Spacing.mediaPlayerTitleColumnWidthPercent - 
-                                        (App.Spacing.mediaPlayerAlbumArtSize + App.Spacing.overallMargin * 2)
-                                    Layout.leftMargin: App.Spacing.overallMargin * 2
-                                    spacing: App.Spacing.overallMargin
-
-                                    // Song title
-                                    Text {
-                                        Layout.fillWidth: true
-                                        text: modelData.replace('.mp3', '')
-                                        color: lastPlayedSong === modelData ? 
-                                            App.Style.accent : 
-                                            App.Style.primaryTextColor
-                                        font.pixelSize: App.Spacing.mediaPlayerTextSize
-                                        font.bold: true
-                                        elide: Text.ElideRight
+                                    // Album art
+                                    LazyImage {
+                                        Layout.preferredWidth: App.Spacing.mediaPlayerAlbumArtSize
+                                        Layout.preferredHeight: App.Spacing.mediaPlayerAlbumArtSize
+                                        fidelity: 120
+                                        smoothing: true
+                                        mipmap: true
+                                        antialiasing: true
+                                        quality: 0.7
+                                        source: visible ? 
+                                            (mediaManager ? 
+                                                mediaManager.get_album_art(modelData) || 
+                                                "./assets/missing_art.jpg" : 
+                                                "./assets/missing_art.jpg") : 
+                                            ""
                                     }
 
-                                    // Artist and duration
-                                    RowLayout {
+                                    // Title and duration
+                                    ColumnLayout {
                                         Layout.fillWidth: true
-                                        spacing: App.Spacing.overallMargin * 2
+                                        spacing: App.Spacing.overallMargin
 
-                                        // Artist name
+                                        // Song title
                                         Text {
-                                            text: mediaManager ? 
-                                                mediaManager.get_band(modelData) : 
-                                                "Unknown Artist"
-                                            color: App.Style.secondaryTextColor
-                                            font.pixelSize: App.Spacing.mediaPlayerSecondaryTextSize
+                                            Layout.fillWidth: true
+                                            text: modelData.replace('.mp3', '')
+                                            color: lastPlayedSong === modelData ? 
+                                                App.Style.accent : 
+                                                App.Style.primaryTextColor
+                                            font.pixelSize: App.Spacing.mediaPlayerTextSize
+                                            font.bold: true
                                             elide: Text.ElideRight
-                                        }
-
-                                        // Separator
-                                        Text {
-                                            text: "•"
-                                            color: App.Style.secondaryTextColor
-                                            font.pixelSize: App.Spacing.mediaPlayerSecondaryTextSize
                                         }
 
                                         // Duration
@@ -556,15 +580,26 @@ Item {
                                     }
                                 }
 
+                                // Artist column
+                                Text {
+                                    Layout.preferredWidth: parent.width * 0.3 // 30% for artist column
+                                    text: mediaManager ? 
+                                        mediaManager.get_band(modelData) : 
+                                        "Unknown Artist"
+                                    color: App.Style.secondaryTextColor
+                                    font.pixelSize: App.Spacing.mediaPlayerSecondaryTextSize
+                                    horizontalAlignment: Text.AlignLeft
+                                    elide: Text.ElideRight
+                                }
+
                                 // Album column
                                 Text {
-                                    Layout.preferredWidth: parent.width * App.Spacing.mediaPlayerAlbumColumnWidthPercent
+                                    Layout.preferredWidth: parent.width * 0.3 // 30% for album column
                                     text: mediaManager ? 
                                         mediaManager.get_album(modelData) : 
                                         "Unknown Album"
                                     color: App.Style.secondaryTextColor
                                     font.pixelSize: App.Spacing.mediaPlayerSecondaryTextSize
-                                    Layout.leftMargin: App.Spacing.overallMargin * 2
                                     horizontalAlignment: Text.AlignLeft
                                     elide: Text.ElideRight
                                 }

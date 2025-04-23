@@ -143,15 +143,15 @@ Item {
         property string unit: ""
         property real minValue: 0
         property real maxValue: 100
-        property string parameter: ""  // Add parameter property
-
-        color: App.Style.contentColor
+        property string parameter: ""
+        
+        // Use the themed box background color instead of contentColor
+        color: App.Style.obdBoxBackground
         radius: 8
         visible: settingsManager ? settingsManager.get_obd_parameter_enabled(parameter, true) : true
         
         // Call updateLayout when visibility changes
         onVisibleChanged: {
-            // Use a timer to allow all visibility changes to complete
             updateTimer.restart();
         }
 
@@ -184,7 +184,8 @@ Item {
                 Rectangle {
                     width: Math.max(6, parent.width * Math.min(1, (value - minValue) / (maxValue - minValue)))
                     height: parent.height
-                    color: App.Style.accent
+                    // Use the themed bar color instead of accent
+                    color: App.Style.obdBarColor
                     radius: 6
                     Behavior on width { NumberAnimation { duration: 200 } }
                 }
