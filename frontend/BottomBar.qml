@@ -350,8 +350,8 @@ Rectangle {
                             verticalCenter: parent.verticalCenter
                         }
                         // Make the clickable area wider than just the text
-                        width: parent.parent.parent.width
-                        height: parent.parent.parent.height  // Full height of parent
+                        width: parent.width
+                        height: parent.parent.height  // Full height of parent
                         
                         Text {
                             id: volumeText

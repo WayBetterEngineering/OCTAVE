@@ -1,14 +1,25 @@
 # OCTAVE
 
 ## Overview
-OCTAVE (Open-source Cross-platform Telematics for Augmented Vehicle Experience) is an open-source infotainment system designed to provide a seamless interface for vehicle systems, media playback, navigation, and OBD-II diagnostics.
+[OCTAVE](https://octave.waybetterengineering.com/) (Open-source Cross-platform Telematics for Augmented Vehicle Experience) is a solution to having a fully automatable infotainment center in your vehicle. While OCTAVE could theoretically work in any vehicle, it best suits older cars with dilapidated infotainment systems. We were always left seeking more from the infotainment systems in our cars, so we wanted to develop a solution that could be extremely feature-rich. We also wanted to be able to see all the OBD data coming from the vehicle while still being able to play music and all that good stuff.
+
+OCTAVE is designed to be cross-platform so that the method of installing into a car is up to the user. Most would most likely choose a Raspberry Pi or equivalent and some sort of smaller touchscreen, grabbing power from the car, a 3D printed mount for the screen, and a way to interface into your speakers—and you're good to go! However, this can be run on Windows, Mac, and Linux alike, which makes for a really easy way to code and test new features, or if you really wanted to, you could have a Windows or Mac-based device embedded in your vehicle.
+
+This app was designed to be easy to work with, so it has a Python backend with a QML-based front end. There's also a settings configuration JSON file that's used to save all customizable features within the app, so everything you change stays changed and you can rock the app exactly as you like.
+
+Updates for this project happen fast commits will contain the date to signify when things where last touched. Please feel free to reach out if you think this is cool or if you think its lame you can tell me all about it rob@waybetterengineering.com
+
+## Contributors
+Special thanks to Robert DeGeorge and Marquis Johnson for their significant contributions to this project.
+
+Visit us at [WayBetterEngineering](https://www.waybetterengineering.com/) to follow our journey.
 
 ## Features
-- **Media Player**: Album art display, playlist management, and music library organization  
-- **Integrated Equalizer**: Visual equalizer with customizable presets and system equalizer support  
-- **OBD-II Integration**: Real-time vehicle diagnostics with customizable dashboard  
-- **Customizable UI**: Multiple built-in themes and ability to create custom themes  
-- **Cross-Platform**: Compatible with Windows, Linux, and macOS  
+- **Media Player**: Can play MP3 files, switch between playlists, music library stats, ability to shuffle songs, metadata integration including album art
+- **Equalizer**: 10-band system-level equalizer (requires APO for Windows, EasyEffects for Linux, and EQ for Mac)
+- **OBD-II Integration**: Real-time vehicle diagnostics with customizable dashboards
+- **Customizable UI**: Built-in custom themes with ability to create your own, all icons are SVG-based and easy to change to what you want, also has UI scaling for fine-tuning your needs
+- **Cross-Platform**: Compatible with Windows, Linux, and macOS
 
 ## Screenshots
 ![Home Page](frontend/assets/readme/home_page.png)
@@ -17,20 +28,13 @@ OCTAVE (Open-source Cross-platform Telematics for Augmented Vehicle Experience) 
 ![OBD Page](frontend/assets/readme/obd_page.png)
 
 ## System Requirements
-- **Minimum Screen Resolution**: 800x480 (recommended: 1280x720 or higher)  
-- **Memory**: 2GB RAM minimum  
-- **OBD Functionality**: Bluetooth-enabled OBD-II adapter  
-- **Equalizer Performance**: System-level equalizer software  
-- **Operating Systems**: Windows 10+, Ubuntu 20.04+, macOS 11+  
+- For now, I've successfully tested this on a Raspberry Pi 3 running Bookworm
 
 ## Installation
 
 ### Prerequisites
-- Python 3.8 or newer  
-- PySide6 (Qt for Python)  
-- Python-OBD library  
-- Mutagen (for media metadata)  
-- Additional dependencies listed in `requirements.txt`  
+- Python 3.8 or newer
+- All required packages listed in the [requirements.txt](requirements.txt) file
 
 ---
 
@@ -173,6 +177,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 5. Open a Pull Request  
 
 ---
+
 
 ## License
 Copyright © 2025 WayBetterEngineering  
