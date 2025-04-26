@@ -271,12 +271,13 @@ class SettingsManager(QObject):
         self._background_grid = grid_setting
         self.update_setting("backgroundGrid", grid_setting, self.backgroundGridChanged)
         
+        
     @Slot(int)
     def save_screen_width(self, width):
         print(f"Saving screen width: {width}")
         self._screen_width = width
         self.update_setting("screenWidth", width, self.screenWidthChanged)
-
+        
     @Slot(int)
     def save_screen_height(self, height):
         print(f"Saving screen height: {height}")

@@ -1,13 +1,13 @@
 {
     "deviceName": "OCTAVE",
-    "themeSetting": "VividGradient",
+    "themeSetting": "CosmicVoyager",
     "startUpVolume": 0.33,
     "clockFormat24Hour": false,
     "showClock": true,
     "clockSize": 39,
     "backgroundGrid": "4x4",
-    "screenWidth": 1305,
-    "screenHeight": 579,
+    "screenWidth": 1920,
+    "screenHeight": 1017,
     "backgroundBlurRadius": 40,
     "uiScale": 0.7,
     "obdParameters": {
@@ -34,7 +34,7 @@
     },
     "obdBluetoothPort": "/dev/rfcomm0",
     "obdFastMode": true,
-    "mediaFolder": "C:\\Users\\Robde\\Music\\The Great Outdoors",
+    "mediaFolder": "C:\\Users\\Redto\\Music",
     "showBackgroundOverlay": true,
     "fuelTankCapacity": 19.0,
     "directoryHistory": [
@@ -43,10 +43,10 @@
         "C:\\Users\\Robde\\Music\\Bangers & Mash"
     ],
     "homeOBDParameters": [
-        "THROTTLE_POS",
         "ENGINE_LOAD",
-        "RPM",
-        "SPEED"
+        "SPEED",
+        "INTAKE_TEMP",
+        "SHORT_FUEL_TRIM_1"
     ],
     "customThemes": {}
 }

@@ -44,9 +44,7 @@ engine.rootContext().setContextProperty("equalizerManager", equalizer_manager)
 # Connect equalizer to media manager (if the connection method exists)
 if hasattr(media_manager, 'connect_equalizer'):
     media_manager.connect_equalizer(equalizer_manager)
-    print("Connected equalizer manager to media manager")
-else:
-    print("MediaManager doesn't have connect_equalizer method - update your MediaManager class")
+
 
 # SVG Manager
 svg_manager = SVGManager()

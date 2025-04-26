@@ -103,11 +103,17 @@ Rectangle {
                             color: App.Style.bottomBarPreviousButton
                         }
                     }
+                    Item {
+                        id: previousButtonClickArea
+                        anchors.centerIn: parent
+                        width: parent.width * 1.5
+                        height: parent.height * 2.5   
 
-                    MouseArea {
-                        id: mouseAreaPrev
-                        anchors.fill: parent
-                        onClicked: mediaManager.previous_track()
+                        MouseArea {
+                            id: mouseAreaPrev
+                            anchors.fill: parent
+                            onClicked: mediaManager.previous_track()
+                        }
                     }
                 }
 
@@ -157,11 +163,17 @@ Rectangle {
                             color: App.Style.bottomBarPlayButton
                         }
                     }
-                    
-                    MouseArea {
-                        id: mouseAreaPlay
-                        anchors.fill: parent
-                        onClicked: mediaManager.toggle_play()
+                    Item {
+                        id: playButtonClickArea
+                        anchors.centerIn: parent
+                        width: parent.width * 1.5
+                        height: parent.height * 2.5   
+
+                        MouseArea {
+                            id: mouseAreaPlay
+                            anchors.fill: parent
+                            onClicked: mediaManager.toggle_play()
+                        }
                     }
                 }
 
@@ -210,11 +222,17 @@ Rectangle {
                             color: App.Style.bottomBarNextButton
                         }
                     }
+                    Item {
+                        id: nextButtonClickArea
+                        anchors.centerIn: parent
+                        width: parent.width * 1.5
+                        height: parent.height * 2.5
                     
-                    MouseArea {
-                        id: mouseAreaNext
-                        anchors.fill: parent
-                        onClicked: mediaManager.next_track()
+                        MouseArea {
+                            id: mouseAreaNext
+                            anchors.fill: parent
+                            onClicked: mediaManager.next_track()
+                        }
                     }
                 }
 
@@ -270,10 +288,17 @@ Rectangle {
                         }
                     }
 
-                    MouseArea {
-                        id: mouseAreaShuffle
-                        anchors.fill: parent
-                        onClicked: mediaManager.toggle_shuffle()
+                    Item {
+                        id: shuffleButtonClickArea
+                        anchors.centerIn: parent
+                        width: parent.width * 1.5
+                        height: parent.height * 2.5
+
+                        MouseArea {
+                            id: mouseAreaShuffle
+                            anchors.fill: parent
+                            onClicked: mediaManager.toggle_shuffle()
+                        }
                     }
                 }
 
@@ -306,7 +331,7 @@ Rectangle {
                         Image {
                             id: muteButtonImage
                             anchors.centerIn: parent
-                            width: parent.width
+                            width: parent.width  
                             height: parent.height
                             source: getUpdatedMuteSource()
                             sourceSize: Qt.size(width * 2, height * 2)
@@ -323,13 +348,19 @@ Rectangle {
                             color: App.Style.bottomBarVolumeButton
                         }
                     }
+                    Item {
+                        id: muteButtonClickArea
+                        anchors.centerIn: parent
+                        width: parent.width * 1.5
+                        height: parent.height * 2.5
                     
-                    MouseArea {
-                        id: mouseAreaMute
-                        anchors.fill: parent
-                        onClicked: {
-                            muteButton.isMuted = !muteButton.isMuted
-                            mediaManager.toggle_mute()
+                        MouseArea {
+                            id: mouseAreaMute
+                            anchors.fill: parent 
+                            onClicked: {
+                                muteButton.isMuted = !muteButton.isMuted
+                                mediaManager.toggle_mute()
+                            }
                         }
                     }
                 }
@@ -350,8 +381,8 @@ Rectangle {
                             verticalCenter: parent.verticalCenter
                         }
                         // Make the clickable area wider than just the text
-                        width: parent.width
-                        height: parent.parent.height  // Full height of parent
+                        width: parent.width * 1.75
+                        height: parent.parent.height * 1.75 
                         
                         Text {
                             id: volumeText
@@ -360,7 +391,7 @@ Rectangle {
                                 verticalCenter: parent.verticalCenter
                             }
                             text: volumeControl.currentValue + "%"
-                            color: App.Style.primaryTextColor
+                            color: App.Style.bottomBarVolumeButton
                             font.pixelSize: App.Spacing.bottomBarVolumeText
                             font.bold: true
                         }
@@ -831,11 +862,38 @@ Rectangle {
                 }
                 spacing: App.Spacing.bottomBarBetweenButtonMargin
                 
-                Text {
-                    id: clockText
-                    visible: settingsManager ? settingsManager.showClock : true
-                    font.pixelSize: settingsManager ? settingsManager.clockSize : 18
-                    color: App.Style.clockTextColor
+
+                Item {
+                    id: clockContainer
+                    Layout.preferredWidth: clockText.implicitWidth + 20 // Add some padding
+                    Layout.preferredHeight: clockText.implicitHeight + 10
+                    
+                    Rectangle {
+                        anchors.fill: parent
+                        color: mouseAreaClock.pressed ? App.Style.hoverColor : "transparent"
+                        radius: 4
+                    }
+                    
+                    Text {
+                        id: clockText
+                        anchors.centerIn: parent
+                        visible: settingsManager ? settingsManager.showClock : true
+                        font.pixelSize: settingsManager ? settingsManager.clockSize : 18
+                        color: App.Style.clockTextColor
+                    }
+                    
+                    MouseArea {
+                        id: mouseAreaClock
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        onClicked: {
+                            var page = Qt.createComponent("CarMenu.qml").createObject(stackView, {
+                                stackView: bottomBar.stackView,
+                                mainWindow: bottomBar.mainWindow
+                            })
+                            stackView.push(page)
+                        }
+                    }
                 }
             }
         }
@@ -858,7 +916,14 @@ Rectangle {
         function onMuteChanged(muted) {
             updateMuteButtonImage()
         }
-        function onVolumeChanged() {
+        function onVolumeChanged(volume) {
+            // Only update if not being changed by the slider itself
+            if (!volumeSlider.pressed) {
+                // Convert from raw volume to percentage (0-100)
+                var volumePercentage = Math.round(Math.sqrt(volume) * 100)
+                volumeControl.currentValue = volumePercentage
+                volumeSlider.value = volumePercentage
+            }
             updateMuteButtonImage()
         }
         function onShuffleStateChanged(enabled) {
@@ -892,16 +957,12 @@ Rectangle {
             return "./assets/mute_on.svg"
         }
         const volume = volumeSlider.value
-        if (volume < 0.2) return "./assets/mute_off_med.svg"
-        if (volume > 0.9) return "./assets/mute_off_low.svg"
+        if (volumeControl.currentValue < 20) return "./assets/mute_off_med.svg"
+        if (volumeControl.currentValue > 90) return "./assets/mute_off_low.svg"
         return "./assets/mute_off_low.svg"
     }
 
     function updateMuteButtonImage() {
-        muteButtonImage.source = 
-            (mediaManager.is_muted() || muteButton.isMuted || volumeSlider.value === 0) ? "./assets/mute_on.svg" :
-            volumeSlider.value < 0.2 ? "./assets/mute_off_med.svg" :
-            volumeSlider.value > 0.9 ? "./assets/mute_off_low.svg" : 
-            "./assets/mute_off_low.svg"
+        muteButtonImage.source = getUpdatedMuteSource()
     }
 }

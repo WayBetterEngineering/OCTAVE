@@ -133,10 +133,11 @@ ApplicationWindow {
             bottom: bottomBar.top
         }
         
-        initialItem: Qt.createComponent("MainMenu.qml").createObject(stackView, {
-            stackView: stackView,
-            mainWindow: mainWindow
-        })
+        initialItem: MainMenu {
+            stackView: stackView
+            windowWidth: mainWindow.width
+            windowHeight: mainWindow.height
+        }
         
         // Disable transitions for better performance
         pushEnter: null

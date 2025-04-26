@@ -751,11 +751,11 @@ Item {
                         clip: true
                         
                         model: ListModel {
-                            ListElement { name: "Device Settings"; section: "deviceSettings" }
-                            ListElement { name: "Media Settings"; section: "mediaSettings" }
-                            ListElement { name: "Display Settings"; section: "displaySettings" }
-                            ListElement { name: "OBD Settings"; section: "obdSettings" }
-                            ListElement { name: "Clock Settings"; section: "clockSettings" }
+                            ListElement { name: "Device"; section: "deviceSettings" }
+                            ListElement { name: "Media"; section: "mediaSettings" }
+                            ListElement { name: "Display"; section: "displaySettings" }
+                            ListElement { name: "OBD"; section: "obdSettings" }
+                            ListElement { name: "Clock"; section: "clockSettings" }
                             ListElement { name: "About"; section: "about" }
                         }
                         
@@ -800,7 +800,7 @@ Item {
                                 }
                                 text: name
                                 color: currentSection === section ? App.Style.primaryTextColor : App.Style.secondaryTextColor
-                                font.pixelSize: App.Spacing.overallText
+                                font.pixelSize: App.Spacing.overallText*2
                                 elide: Text.ElideRight
                             }
                             
@@ -924,7 +924,7 @@ Item {
                                 
                                 RowLayout {
                                     Layout.fillWidth: true
-                                    spacing: App.Spacing.itemSpacing
+                                    spacing: App.Spacing.rowSpacing
                                     
                                     SettingsTextField {
                                         id: mediaFolderField
@@ -1312,61 +1312,9 @@ Item {
                         contentWidth: parent.width
                         ScrollBar.vertical.policy: ScrollBar.AsNeeded
                         clip: true
-                    
                         
                         ColumnLayout {
                             width: parent.width
-
-                    
-                            // Make sure the loadThemeColors function is properly defined in scope
-                            function loadThemeColors(themeName) {
-                                console.log("Loading theme colors for:", themeName)
-                                let themeObj
-                                
-                                try {
-                                    // Check if it's a custom theme
-                                    if (settingsManager && settingsManager.customThemes && 
-                                        settingsManager.customThemes.indexOf(themeName) !== -1) {
-                                        let themeJSON = settingsManager.get_custom_theme(themeName)
-                                        themeObj = JSON.parse(themeJSON)
-                                    } else if (App.Style.themes[themeName]) {
-                                        // Built-in theme
-                                        themeObj = App.Style.themes[themeName]
-                                    } else {
-                                        console.log("Unknown theme:", themeName)
-                                        return // Unknown theme
-                                    }
-                                    
-                                    // Update color rectangles
-                                    baseColorRect.color = themeObj.base
-                                    baseColorRect.colorValue = themeObj.base
-                                    
-                                    baseAltColorRect.color = themeObj.baseAlt
-                                    baseAltColorRect.colorValue = themeObj.baseAlt
-                                    
-                                    accentColorRect.color = themeObj.accent
-                                    accentColorRect.colorValue = themeObj.accent
-                                    
-                                    primaryTextColorRect.color = themeObj.text.primary
-                                    primaryTextColorRect.colorValue = themeObj.text.primary
-                                    
-                                    secondaryTextColorRect.color = themeObj.text.secondary
-                                    secondaryTextColorRect.colorValue = themeObj.text.secondary
-                                    
-                                    // Use the media highlight color if available, otherwise use accent
-                                    let mediaColor = themeObj.sliders && themeObj.sliders.media ? 
-                                                themeObj.sliders.media : themeObj.accent
-                                    mediaHighlightColorRect.color = mediaColor
-                                    mediaHighlightColorRect.colorValue = mediaColor
-                                    
-                                    // Don't set theme name when loading - only when using "Copy of"
-                                    if (customThemeName.text === "" || customThemeName.text.startsWith("Copy of")) {
-                                        customThemeName.text = "Copy of " + themeName
-                                    }
-                                } catch (e) {
-                                    console.error("Error in loadThemeColors:", e)
-                                }
-                            }
 
                             Component.onCompleted: {
                                 // When the display settings page loads, set the color boxes to match the current theme
@@ -1374,17 +1322,115 @@ Item {
                                     if (settingsManager) {
                                         loadThemeColors(settingsManager.themeSetting)
                                     }
+                                    function loadThemeColors(themeName) {
+                                        console.log("Loading theme colors for:", themeName)
+                                        let themeObj
+                                        
+                                        try {
+                                            // Check if it's a custom theme
+                                            if (settingsManager && settingsManager.customThemes && 
+                                                settingsManager.customThemes.indexOf(themeName) !== -1) {
+                                                let themeJSON = settingsManager.get_custom_theme(themeName)
+                                                themeObj = JSON.parse(themeJSON)
+                                            } else if (App.Style.themes[themeName]) {
+                                                // Built-in theme
+                                                themeObj = App.Style.themes[themeName]
+                                            } else {
+                                                console.log("Unknown theme:", themeName)
+                                                return // Unknown theme
+                                            }
+                                            
+                                            // Set the theme name in the input field
+                                            customThemeName.text = themeName
+                                            
+                                            // Update color rectangles
+                                            baseColorRect.color = themeObj.base
+                                            baseColorRect.colorValue = themeObj.base
+                                            
+                                            baseAltColorRect.color = themeObj.baseAlt
+                                            baseAltColorRect.colorValue = themeObj.baseAlt
+                                            
+                                            accentColorRect.color = themeObj.accent
+                                            accentColorRect.colorValue = themeObj.accent
+                                            
+                                            primaryTextColorRect.color = themeObj.text.primary
+                                            primaryTextColorRect.colorValue = themeObj.text.primary
+                                            
+                                            secondaryTextColorRect.color = themeObj.text.secondary
+                                            secondaryTextColorRect.colorValue = themeObj.text.secondary
+                                            
+                                            // State colors
+                                            if (themeObj.states) {
+                                                if (themeObj.states.hover) {
+                                                    hoverStateColorRect.color = themeObj.states.hover
+                                                    hoverStateColorRect.colorValue = themeObj.states.hover
+                                                }
+                                                
+                                                if (themeObj.states.paused) {
+                                                    pausedStateColorRect.color = themeObj.states.paused
+                                                    pausedStateColorRect.colorValue = themeObj.states.paused
+                                                }
+                                                
+                                                if (themeObj.states.playing) {
+                                                    playingStateColorRect.color = themeObj.states.playing
+                                                    playingStateColorRect.colorValue = themeObj.states.playing
+                                                }
+                                            }
+                                            
+                                            // Slider colors
+                                            if (themeObj.sliders) {
+                                                if (themeObj.sliders.volume) {
+                                                    volumeSliderColorRect.color = themeObj.sliders.volume
+                                                    volumeSliderColorRect.colorValue = themeObj.sliders.volume
+                                                } else {
+                                                    volumeSliderColorRect.color = themeObj.accent
+                                                    volumeSliderColorRect.colorValue = themeObj.accent
+                                                }
+                                                
+                                                if (themeObj.sliders.media) {
+                                                    mediaHighlightColorRect.color = themeObj.sliders.media
+                                                    mediaHighlightColorRect.colorValue = themeObj.sliders.media
+                                                } else {
+                                                    mediaHighlightColorRect.color = themeObj.accent
+                                                    mediaHighlightColorRect.colorValue = themeObj.accent
+                                                }
+                                            }
+                                            
+                                            // Bottom bar button colors
+                                            if (themeObj.bottombar && themeObj.bottombar.play) {
+                                                bottomBarButtonsColorRect.color = themeObj.bottombar.play
+                                                bottomBarButtonsColorRect.colorValue = themeObj.bottombar.play
+                                            } else {
+                                                bottomBarButtonsColorRect.color = themeObj.accent
+                                                bottomBarButtonsColorRect.colorValue = themeObj.accent
+                                            }
+                                            
+                                            // Media room button colors
+                                            if (themeObj.mediaroom && themeObj.mediaroom.play) {
+                                                mediaRoomButtonsColorRect.color = themeObj.mediaroom.play
+                                                mediaRoomButtonsColorRect.colorValue = themeObj.mediaroom.play
+                                            } else {
+                                                mediaRoomButtonsColorRect.color = themeObj.accent
+                                                mediaRoomButtonsColorRect.colorValue = themeObj.accent
+                                            }
+                                            
+                                            // Media container color
+                                            if (themeObj.mainmenu && themeObj.mainmenu.mediaContainer) {
+                                                mediaContainerColorRect.color = themeObj.mainmenu.mediaContainer
+                                                mediaContainerColorRect.colorValue = themeObj.mainmenu.mediaContainer
+                                            } else {
+                                                mediaContainerColorRect.color = Qt.darker(themeObj.accent, 1.2)
+                                                mediaContainerColorRect.colorValue = Qt.darker(themeObj.accent, 1.2)
+                                            }
+                                            
+                                        } catch (e) {
+                                            console.error("Error in loadThemeColors:", e)
+                                        }
+                                    }
                                 })
                             }
 
-                            Connections {
-                                target: settingsManager
-                                function onThemeSettingChanged() {
-                                    if (settingsManager && visible) {
-                                        loadThemeColors(settingsManager.themeSetting)
-                                    }
-                                }
-                            }
+
 
                              // UI Scaling slider
                             ColumnLayout {
@@ -2169,9 +2215,7 @@ Item {
                                 }
                                 
                                 // Function to load theme colors from theme name
-                                // Called when component loads and when theme changes
                                 function loadThemeColors(themeName) {
-                                    console.log("Loading theme colors for:", themeName)
                                     let themeObj
                                     
                                     try {
@@ -2187,9 +2231,6 @@ Item {
                                             console.log("Unknown theme:", themeName)
                                             return // Unknown theme
                                         }
-                                        
-                                        // Set the theme name in the input field
-                                        customThemeName.text = themeName
                                         
                                         // Update color rectangles
                                         baseColorRect.color = themeObj.base
@@ -2207,72 +2248,17 @@ Item {
                                         secondaryTextColorRect.color = themeObj.text.secondary
                                         secondaryTextColorRect.colorValue = themeObj.text.secondary
                                         
-                                        // State colors
-                                        if (themeObj.states) {
-                                            if (themeObj.states.hover) {
-                                                hoverStateColorRect.color = themeObj.states.hover
-                                                hoverStateColorRect.colorValue = themeObj.states.hover
-                                            }
-                                            
-                                            if (themeObj.states.paused) {
-                                                pausedStateColorRect.color = themeObj.states.paused
-                                                pausedStateColorRect.colorValue = themeObj.states.paused
-                                            }
-                                            
-                                            if (themeObj.states.playing) {
-                                                playingStateColorRect.color = themeObj.states.playing
-                                                playingStateColorRect.colorValue = themeObj.states.playing
-                                            }
-                                        }
+                                        // Use the media highlight color if available, otherwise use accent
+                                        let mediaColor = themeObj.sliders && themeObj.sliders.media ? 
+                                                    themeObj.sliders.media : themeObj.accent
+                                        mediaHighlightColorRect.color = mediaColor
+                                        mediaHighlightColorRect.colorValue = mediaColor
                                         
-                                        // Slider colors
-                                        if (themeObj.sliders) {
-                                            if (themeObj.sliders.volume) {
-                                                volumeSliderColorRect.color = themeObj.sliders.volume
-                                                volumeSliderColorRect.colorValue = themeObj.sliders.volume
-                                            } else {
-                                                volumeSliderColorRect.color = themeObj.accent
-                                                volumeSliderColorRect.colorValue = themeObj.accent
-                                            }
-                                            
-                                            if (themeObj.sliders.media) {
-                                                mediaHighlightColorRect.color = themeObj.sliders.media
-                                                mediaHighlightColorRect.colorValue = themeObj.sliders.media
-                                            } else {
-                                                mediaHighlightColorRect.color = themeObj.accent
-                                                mediaHighlightColorRect.colorValue = themeObj.accent
-                                            }
+                                        // Don't set theme name when loading - only when using "Copy of"
+                                        if (customThemeName.text === "" || customThemeName.text.startsWith("Copy of")) {
+                                            customThemeName.text = "Copy of " + themeName
                                         }
-                                        
-                                        // Bottom bar button colors
-                                        if (themeObj.bottombar && themeObj.bottombar.play) {
-                                            bottomBarButtonsColorRect.color = themeObj.bottombar.play
-                                            bottomBarButtonsColorRect.colorValue = themeObj.bottombar.play
-                                        } else {
-                                            bottomBarButtonsColorRect.color = themeObj.accent
-                                            bottomBarButtonsColorRect.colorValue = themeObj.accent
-                                        }
-                                        
-                                        // Media room button colors
-                                        if (themeObj.mediaroom && themeObj.mediaroom.play) {
-                                            mediaRoomButtonsColorRect.color = themeObj.mediaroom.play
-                                            mediaRoomButtonsColorRect.colorValue = themeObj.mediaroom.play
-                                        } else {
-                                            mediaRoomButtonsColorRect.color = themeObj.accent
-                                            mediaRoomButtonsColorRect.colorValue = themeObj.accent
-                                        }
-                                        
-                                        // Media container color
-                                        if (themeObj.mainmenu && themeObj.mainmenu.mediaContainer) {
-                                            mediaContainerColorRect.color = themeObj.mainmenu.mediaContainer
-                                            mediaContainerColorRect.colorValue = themeObj.mainmenu.mediaContainer
-                                        } else {
-                                            mediaContainerColorRect.color = Qt.darker(themeObj.accent, 1.2)
-                                            mediaContainerColorRect.colorValue = Qt.darker(themeObj.accent, 1.2)
-                                        }
-                                        
                                     } catch (e) {
-                                        console.error("Error in loadThemeColors:", e)
                                     }
                                 }
                                 
@@ -2292,6 +2278,111 @@ Item {
                                         if (settingsManager) {
                                             loadThemeColors(settingsManager.themeSetting)
                                         }
+                                        function loadThemeColors(themeName) {
+                                            console.log("Loading theme colors for:", themeName)
+                                            let themeObj
+                                            
+                                            try {
+                                                // Check if it's a custom theme
+                                                if (settingsManager && settingsManager.customThemes && 
+                                                    settingsManager.customThemes.indexOf(themeName) !== -1) {
+                                                    let themeJSON = settingsManager.get_custom_theme(themeName)
+                                                    themeObj = JSON.parse(themeJSON)
+                                                } else if (App.Style.themes[themeName]) {
+                                                    // Built-in theme
+                                                    themeObj = App.Style.themes[themeName]
+                                                } else {
+                                                    console.log("Unknown theme:", themeName)
+                                                    return // Unknown theme
+                                                }
+                                                
+                                                // Set the theme name in the input field
+                                                customThemeName.text = themeName
+                                                
+                                                // Update color rectangles
+                                                baseColorRect.color = themeObj.base
+                                                baseColorRect.colorValue = themeObj.base
+                                                
+                                                baseAltColorRect.color = themeObj.baseAlt
+                                                baseAltColorRect.colorValue = themeObj.baseAlt
+                                                
+                                                accentColorRect.color = themeObj.accent
+                                                accentColorRect.colorValue = themeObj.accent
+                                                
+                                                primaryTextColorRect.color = themeObj.text.primary
+                                                primaryTextColorRect.colorValue = themeObj.text.primary
+                                                
+                                                secondaryTextColorRect.color = themeObj.text.secondary
+                                                secondaryTextColorRect.colorValue = themeObj.text.secondary
+                                                
+                                                // State colors
+                                                if (themeObj.states) {
+                                                    if (themeObj.states.hover) {
+                                                        hoverStateColorRect.color = themeObj.states.hover
+                                                        hoverStateColorRect.colorValue = themeObj.states.hover
+                                                    }
+                                                    
+                                                    if (themeObj.states.paused) {
+                                                        pausedStateColorRect.color = themeObj.states.paused
+                                                        pausedStateColorRect.colorValue = themeObj.states.paused
+                                                    }
+                                                    
+                                                    if (themeObj.states.playing) {
+                                                        playingStateColorRect.color = themeObj.states.playing
+                                                        playingStateColorRect.colorValue = themeObj.states.playing
+                                                    }
+                                                }
+                                                
+                                                // Slider colors
+                                                if (themeObj.sliders) {
+                                                    if (themeObj.sliders.volume) {
+                                                        volumeSliderColorRect.color = themeObj.sliders.volume
+                                                        volumeSliderColorRect.colorValue = themeObj.sliders.volume
+                                                    } else {
+                                                        volumeSliderColorRect.color = themeObj.accent
+                                                        volumeSliderColorRect.colorValue = themeObj.accent
+                                                    }
+                                                    
+                                                    if (themeObj.sliders.media) {
+                                                        mediaHighlightColorRect.color = themeObj.sliders.media
+                                                        mediaHighlightColorRect.colorValue = themeObj.sliders.media
+                                                    } else {
+                                                        mediaHighlightColorRect.color = themeObj.accent
+                                                        mediaHighlightColorRect.colorValue = themeObj.accent
+                                                    }
+                                                }
+                                                
+                                                // Bottom bar button colors
+                                                if (themeObj.bottombar && themeObj.bottombar.play) {
+                                                    bottomBarButtonsColorRect.color = themeObj.bottombar.play
+                                                    bottomBarButtonsColorRect.colorValue = themeObj.bottombar.play
+                                                } else {
+                                                    bottomBarButtonsColorRect.color = themeObj.accent
+                                                    bottomBarButtonsColorRect.colorValue = themeObj.accent
+                                                }
+                                                
+                                                // Media room button colors
+                                                if (themeObj.mediaroom && themeObj.mediaroom.play) {
+                                                    mediaRoomButtonsColorRect.color = themeObj.mediaroom.play
+                                                    mediaRoomButtonsColorRect.colorValue = themeObj.mediaroom.play
+                                                } else {
+                                                    mediaRoomButtonsColorRect.color = themeObj.accent
+                                                    mediaRoomButtonsColorRect.colorValue = themeObj.accent
+                                                }
+                                                
+                                                // Media container color
+                                                if (themeObj.mainmenu && themeObj.mainmenu.mediaContainer) {
+                                                    mediaContainerColorRect.color = themeObj.mainmenu.mediaContainer
+                                                    mediaContainerColorRect.colorValue = themeObj.mainmenu.mediaContainer
+                                                } else {
+                                                    mediaContainerColorRect.color = Qt.darker(themeObj.accent, 1.2)
+                                                    mediaContainerColorRect.colorValue = Qt.darker(themeObj.accent, 1.2)
+                                                }
+                                                
+                                            } catch (e) {
+                                                console.error("Error in loadThemeColors:", e)
+                                            }
+                                        }
                                     }
                                 }
                                 
@@ -2301,6 +2392,111 @@ Item {
                                     function onCurrentValueChanged() {
                                         if (settingsManager && themeButton.currentValue) {
                                             loadThemeColors(themeButton.currentValue)
+                                        }
+                                        function loadThemeColors(themeName) {
+                                            console.log("Loading theme colors for:", themeName)
+                                            let themeObj
+                                            
+                                            try {
+                                                // Check if it's a custom theme
+                                                if (settingsManager && settingsManager.customThemes && 
+                                                    settingsManager.customThemes.indexOf(themeName) !== -1) {
+                                                    let themeJSON = settingsManager.get_custom_theme(themeName)
+                                                    themeObj = JSON.parse(themeJSON)
+                                                } else if (App.Style.themes[themeName]) {
+                                                    // Built-in theme
+                                                    themeObj = App.Style.themes[themeName]
+                                                } else {
+                                                    console.log("Unknown theme:", themeName)
+                                                    return // Unknown theme
+                                                }
+                                                
+                                                // Set the theme name in the input field
+                                                customThemeName.text = themeName
+                                                
+                                                // Update color rectangles
+                                                baseColorRect.color = themeObj.base
+                                                baseColorRect.colorValue = themeObj.base
+                                                
+                                                baseAltColorRect.color = themeObj.baseAlt
+                                                baseAltColorRect.colorValue = themeObj.baseAlt
+                                                
+                                                accentColorRect.color = themeObj.accent
+                                                accentColorRect.colorValue = themeObj.accent
+                                                
+                                                primaryTextColorRect.color = themeObj.text.primary
+                                                primaryTextColorRect.colorValue = themeObj.text.primary
+                                                
+                                                secondaryTextColorRect.color = themeObj.text.secondary
+                                                secondaryTextColorRect.colorValue = themeObj.text.secondary
+                                                
+                                                // State colors
+                                                if (themeObj.states) {
+                                                    if (themeObj.states.hover) {
+                                                        hoverStateColorRect.color = themeObj.states.hover
+                                                        hoverStateColorRect.colorValue = themeObj.states.hover
+                                                    }
+                                                    
+                                                    if (themeObj.states.paused) {
+                                                        pausedStateColorRect.color = themeObj.states.paused
+                                                        pausedStateColorRect.colorValue = themeObj.states.paused
+                                                    }
+                                                    
+                                                    if (themeObj.states.playing) {
+                                                        playingStateColorRect.color = themeObj.states.playing
+                                                        playingStateColorRect.colorValue = themeObj.states.playing
+                                                    }
+                                                }
+                                                
+                                                // Slider colors
+                                                if (themeObj.sliders) {
+                                                    if (themeObj.sliders.volume) {
+                                                        volumeSliderColorRect.color = themeObj.sliders.volume
+                                                        volumeSliderColorRect.colorValue = themeObj.sliders.volume
+                                                    } else {
+                                                        volumeSliderColorRect.color = themeObj.accent
+                                                        volumeSliderColorRect.colorValue = themeObj.accent
+                                                    }
+                                                    
+                                                    if (themeObj.sliders.media) {
+                                                        mediaHighlightColorRect.color = themeObj.sliders.media
+                                                        mediaHighlightColorRect.colorValue = themeObj.sliders.media
+                                                    } else {
+                                                        mediaHighlightColorRect.color = themeObj.accent
+                                                        mediaHighlightColorRect.colorValue = themeObj.accent
+                                                    }
+                                                }
+                                                
+                                                // Bottom bar button colors
+                                                if (themeObj.bottombar && themeObj.bottombar.play) {
+                                                    bottomBarButtonsColorRect.color = themeObj.bottombar.play
+                                                    bottomBarButtonsColorRect.colorValue = themeObj.bottombar.play
+                                                } else {
+                                                    bottomBarButtonsColorRect.color = themeObj.accent
+                                                    bottomBarButtonsColorRect.colorValue = themeObj.accent
+                                                }
+                                                
+                                                // Media room button colors
+                                                if (themeObj.mediaroom && themeObj.mediaroom.play) {
+                                                    mediaRoomButtonsColorRect.color = themeObj.mediaroom.play
+                                                    mediaRoomButtonsColorRect.colorValue = themeObj.mediaroom.play
+                                                } else {
+                                                    mediaRoomButtonsColorRect.color = themeObj.accent
+                                                    mediaRoomButtonsColorRect.colorValue = themeObj.accent
+                                                }
+                                                
+                                                // Media container color
+                                                if (themeObj.mainmenu && themeObj.mainmenu.mediaContainer) {
+                                                    mediaContainerColorRect.color = themeObj.mainmenu.mediaContainer
+                                                    mediaContainerColorRect.colorValue = themeObj.mainmenu.mediaContainer
+                                                } else {
+                                                    mediaContainerColorRect.color = Qt.darker(themeObj.accent, 1.2)
+                                                    mediaContainerColorRect.colorValue = Qt.darker(themeObj.accent, 1.2)
+                                                }
+                                                
+                                            } catch (e) {
+                                                console.error("Error in loadThemeColors:", e)
+                                            }
                                         }
                                     }
                                 }
@@ -2836,13 +3032,7 @@ Item {
                                         
                                         // Change cursor on hover
                                         cursorShape: Qt.PointingHandCursor
-                                        
-                                        // Background effect on hover
-                                        Rectangle {
-                                            anchors.fill: parent
-                                            radius: parent.radius
-                                            color: connectionClickArea.containsMouse ? Qt.rgba(1, 1, 1, 0.1) : "transparent"
-                                        }
+                    
                                         
                                         onClicked: {
                                             if (obdManager) {

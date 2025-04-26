@@ -118,8 +118,6 @@ class MediaManager(QObject):
             
             # Audio processor for real-time processing
             self._audio_processor = None
-            
-            print("Equalizer support prepared in MediaManager")
         except Exception as e:
             print(f"Error setting up equalizer support: {e}")
     

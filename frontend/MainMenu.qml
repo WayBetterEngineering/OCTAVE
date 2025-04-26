@@ -1,15 +1,18 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
+import QtQuick.Controls.Basic 2.15
 import Qt5Compat.GraphicalEffects
 import "." as App
 
 Item {
     id: mainMenu
-    required property StackView stackView
-    required property ApplicationWindow mainWindow
-    width: parent.width
-    height: parent.height
+    property StackView stackView
+    property ApplicationWindow mainWindow
+    property real windowWidth
+    property real windowHeight
+    width: parent ? parent.width : 0
+    height: parent ? parent.height : 0
 
     // Dark background with subtle gradient
     Rectangle {
@@ -258,8 +261,8 @@ Item {
                             });
                         } else {
                             stackView.push("MediaPlayer.qml", {
-                                stackView: mainMenu.stackView,
-                                mainWindow: mainMenu.mainWindow
+                                stackView: stackView,
+                                mainWindow: mainWindow
                             });
                         }
                     }
@@ -295,17 +298,15 @@ Item {
                     anchors.fill: parent
                     onClicked: {
                         stackView.push("OBDMenu.qml", {
-                            stackView: mainMenu.stackView,
-                            mainWindow: mainMenu.mainWindow
+                            stackView: stackView,
+                            mainWindow: mainWindow
                         })
                     }
                 }
             }
         }
     }
-
-
-
+    
     // Timer for initial delayed loading of media data
     Timer {
         id: initialLoadTimer

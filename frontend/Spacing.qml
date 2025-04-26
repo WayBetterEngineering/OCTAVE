@@ -2,11 +2,6 @@
 pragma Singleton
 import QtQuick 2.15
 
-/**
- * Global spacing and sizing singleton for consistent UI scaling
- * Provides calculated dimensions for all UI components based on
- * application size and scaling factors
- */
 QtObject {
     // ===== Base dimensions and scaling factors =====
     property int applicationWidth: width
@@ -51,7 +46,7 @@ QtObject {
     property real bottomBarShuffleButtonWidthPercent: normalButtonSize *1.125
     property real bottomBarShuffleButtonHeightPercent: normalButtonSize *1.125
     property real bottomBarNavButtonWidthPercent: normalButtonSize * 1.1
-    property real bottomBarNavButtonHeightPercent: normalButtonSize * 1.75
+    property real bottomBarNavButtonHeightPercent: normalButtonSize * 2
 
     // Bottom bar volume controls
     property real bottomBarVolumeSliderWidthPercent: 0.05
@@ -125,7 +120,7 @@ QtObject {
     property real settingsDeviceNameWidthPercent: .2
     property real settingsDeviceNameHeightPercent: .05
     property real settingsNavWidthPercent: 0.2
-    property real settingsButtonHeightPercent: 0.1
+    property real settingsButtonHeightPercent: 0.2
     property real settingsPreviewWidthPercent: 0.4
     property real formElementHeightPercent: 0.1
     property real formLabelWidthPercent: 0.2

@@ -83,9 +83,7 @@ class OBDManager(QObject):
             self._settings_manager.obdBluetoothPortChanged.connect(self.reconnect)
             self._settings_manager.obdFastModeChanged.connect(self.reconnect)
             self._settings_manager.obdParametersChanged.connect(self.reconnect)
-        
-        # Try to establish connection
-        self._connect()
+
 
     def _connect(self):
         # Don't start a new connection attempt if one is already in progress
@@ -187,6 +185,7 @@ class OBDManager(QObject):
         self._monitor_thread.start()
     
     def _monitor_connection(self):
+        
         """Thread function to monitor connection status"""
         check_interval = 2.0  # seconds
         last_status = self._connection.status() if self._connection else None

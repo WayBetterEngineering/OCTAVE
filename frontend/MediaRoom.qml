@@ -252,6 +252,208 @@ Item {
             }
         }
 
+        // Volume control at top
+        Rectangle {
+            id: topVolumeControl
+            width: parent.width * 0.75
+            height: App.Spacing.mediaRoomDurationBarHeight
+            anchors {
+                top: parent.top
+                horizontalCenter: parent.horizontalCenter
+                margins: App.Spacing.mediaRoomMargin
+            }
+            color: transparentColor
+            
+            RowLayout {
+                anchors.fill: parent
+                spacing: 10
+                
+                // Volume icon control
+                Control {
+                    id: volumeIconControl
+                    implicitWidth: App.Spacing.bottomBarMuteButtonWidth
+                    implicitHeight: App.Spacing.bottomBarMuteButtonHeight
+                    Layout.alignment: Qt.AlignVCenter
+                    
+                    background: Rectangle { color: "transparent" }
+                    
+                    contentItem: Item {
+                        Image {
+                            id: volumeIconImage
+                            anchors.centerIn: parent
+                            width: parent.width
+                            height: parent.height
+                            source: getVolumeIconSource()
+                            sourceSize: Qt.size(width * 2, height * 2)
+                            fillMode: Image.PreserveAspectFit
+                            smooth: true
+                            antialiasing: true
+                            mipmap: false
+                            visible: false
+                        }
+                        
+                        ColorOverlay {
+                            anchors.fill: volumeIconImage
+                            source: volumeIconImage
+                            color: App.Style.mediaRoomSeekColor
+                            
+                            layer.enabled: true
+                            layer.effect: DropShadow {
+                                transparentBorder: true
+                                horizontalOffset: 4       
+                                verticalOffset: 4         
+                                radius: 8.0               
+                                samples: 17               
+                                color: "#B0000000"        
+                            }
+                        }
+                    }
+                    
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: {
+                            mediaManager.toggle_mute()
+                        }
+                    }
+                }
+                
+                // Volume slider
+                Slider {
+                    id: volumeSlider
+                    Layout.fillWidth: true
+                    from: 0
+                    to: 100
+                    value: volumeControl.currentValue
+                    
+                    // Increase touch area
+                    implicitHeight: App.Spacing.mediaRoomProgressSliderHeight * 4
+                    
+                    background: Rectangle {
+                        x: volumeSlider.leftPadding
+                        y: volumeSlider.topPadding + volumeSlider.availableHeight / 2 - height / 2
+                        width: volumeSlider.availableWidth
+                        height: App.Spacing.mediaRoomProgressSliderHeight
+                        radius: height / 2
+                        color: App.Style.hoverColor
+                        
+                        Rectangle {
+                            width: volumeSlider.visualPosition * parent.width
+                            height: parent.height
+                            radius: height / 2
+                            color: App.Style.volumeSliderColor
+                        }
+                    }
+                    
+                    // Handle styling
+                    handle: Rectangle {
+                        x: volumeSlider.leftPadding + volumeSlider.visualPosition * (volumeSlider.availableWidth - width)
+                        y: volumeSlider.topPadding + volumeSlider.availableHeight / 2 - height / 2
+                        width: App.Spacing.mediaRoomSliderButtonWidth
+                        height: App.Spacing.mediaRoomSliderButtonHeight
+                        radius: App.Spacing.mediaRoomSliderButtonRadius
+                        color: App.Style.accent
+                        visible: true
+                    }
+                    
+                    // Enhanced touch area
+                    MouseArea {
+                        anchors.fill: parent
+                        anchors.topMargin: -10
+                        anchors.bottomMargin: -10
+                        
+                        onPressed: function(mouse) {
+                            var newPos = Math.max(0, Math.min(1, (mouseX - volumeSlider.leftPadding) / volumeSlider.availableWidth))
+                            volumeSlider.value = volumeSlider.from + newPos * (volumeSlider.to - volumeSlider.from)
+                            volumeSlider.pressed = true
+                            mouse.accepted = false
+                        }
+                        
+                        onReleased: function(mouse) {
+                            volumeSlider.pressed = false
+                            mouse.accepted = false
+                        }
+                    }
+                    
+                    // Volume change logic
+                    onValueChanged: {
+                        volumeControl.currentValue = value
+                        
+                        if (mediaManager) {
+                            var normalizedValue = value / 100
+                            var logVolume = Math.pow(normalizedValue, 2.0)
+                            mediaManager.setVolume(logVolume)
+                            
+                            // Unmute if volume was raised from zero
+                            if (value > 0 && volumeControl.isMuted) {
+                                volumeControl.isMuted = false
+                                mediaManager.toggle_mute()
+                            }
+                            
+                            // Update icon
+                            topVolumeControl.updateVolumeIcon()
+                        }
+                    }
+                }
+                
+                // Volume percentage text
+                Text {
+                    id: volumePercentText
+                    text: Math.round(volumeSlider.value) + "%"
+                    color: App.Style.mediaRoomSeekColor
+                    font.pixelSize: App.Spacing.mediaRoomSliderDurationText
+                    Layout.minimumWidth: 40
+                }
+            }
+            
+            // Volume control state properties
+            QtObject {
+                id: volumeControl
+                property int currentValue: 0
+                property bool isMuted: mediaManager ? mediaManager.is_muted() : false
+                
+                Component.onCompleted: {
+                    if (mediaManager) {
+                        var volume = mediaManager.getVolume()
+                        currentValue = Math.round(Math.sqrt(volume) * 100)
+                        isMuted = mediaManager.is_muted()
+                        topVolumeControl.updateVolumeIcon()
+                    }
+                }
+            }
+            
+            // Functions
+            function getVolumeIconSource() {
+                if (volumeControl.isMuted || volumeControl.currentValue === 0) {
+                    return "./assets/mute_on.svg"
+                }
+                if (volumeControl.currentValue < 20) return "./assets/mute_off_med.svg"
+                if (volumeControl.currentValue > 90) return "./assets/mute_off_low.svg"
+                return "./assets/mute_off_low.svg"
+            }
+            
+            function updateVolumeIcon() {
+                volumeIconImage.source = getVolumeIconSource()
+            }
+            
+            // Connections for volume sync
+            Connections {
+                target: mediaManager
+                function onMuteChanged(muted) {
+                    volumeControl.isMuted = muted
+                    topVolumeControl.updateVolumeIcon()
+                }
+                
+                function onVolumeChanged(volume) {
+                    if (!volumeSlider.pressed) {
+                        var volumePercent = Math.round(Math.sqrt(volume) * 100)
+                        volumeControl.currentValue = volumePercent
+                        volumeSlider.value = volumePercent
+                    }
+                    topVolumeControl.updateVolumeIcon()
+                }
+            }
+        }
+
         Rectangle { //media controls container
             id: mediaControlsContainer
             width: App.Spacing.applicationWidth * App.Spacing.mediaRoomControlsContainerWidth
@@ -298,7 +500,7 @@ Item {
                                     fillMode: Image.PreserveAspectFit
                                     smooth: true
                                     antialiasing: true
-                                    mipmap: true
+                                    mipmap: false
                                     visible: false
                                 }
                                 ColorOverlay {
@@ -577,7 +779,7 @@ Item {
                             fillMode: Image.PreserveAspectFit
                             smooth: true
                             antialiasing: true
-                            mipmap: true
+                            mipmap: false
                             
                             layer.enabled: true
                             layer.effect: DropShadow {
@@ -794,6 +996,26 @@ Item {
         }
         function onShuffleStateChanged(enabled) {
             isShuffleEnabled = enabled
+        }
+    }
+    
+    Connections {
+        target: mediaManager
+        function onMuteChanged(muted) {
+            volumeControl.isMuted = muted
+            // Fix: use the proper object path
+            topVolumeControl.updateVolumeIcon()
+        }
+        
+        function onVolumeChanged(volume) {
+            // Only update if not being changed by user
+            if (!volumeSlider.pressed) {
+                var volumePercent = Math.round(Math.sqrt(volume) * 100)
+                volumeControl.currentValue = volumePercent
+                volumeSlider.value = volumePercent
+            }
+            // Fix: use the proper object path
+            topVolumeControl.updateVolumeIcon()
         }
     }
 }
