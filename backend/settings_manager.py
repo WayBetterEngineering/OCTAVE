@@ -24,7 +24,8 @@ class SettingsManager(QObject):
     showBackgroundOverlayChanged = Signal(bool)
     directoryHistoryChanged = Signal()
     homeOBDParametersChanged = Signal()
-    customThemesChanged = Signal() 
+    customThemesChanged = Signal()
+    bottomBarOrientationChanged = Signal(str) 
     
     def __init__(self):
         super().__init__()
@@ -46,6 +47,7 @@ class SettingsManager(QObject):
             "obdBluetoothPort": "/dev/rfcomm0",
             "obdFastMode": True,
             "showBackgroundOverlay": True,
+            "bottomBarOrientation": "bottom",
             "fuelTankCapacity": 15.0,  # Add fuel tank capacity setting in gallons
             "obdParameters": {
                 "COOLANT_TEMP": True,
@@ -103,6 +105,7 @@ class SettingsManager(QObject):
         self._show_background_overlay = self._settings.get("showBackgroundOverlay", self._default_settings["showBackgroundOverlay"])
         self._fuel_tank_capacity = self._settings.get("fuelTankCapacity", self._default_settings["fuelTankCapacity"])
         self._home_obd_parameters = self._settings.get("homeOBDParameters", self._default_settings["homeOBDParameters"])
+        self._bottom_bar_orientation = self._settings.get("bottomBarOrientation", self._default_settings["bottomBarOrientation"])
 
 
         
@@ -144,6 +147,10 @@ class SettingsManager(QObject):
     def uiScale(self):
         return self._ui_scale
     
+    @Property(str, notify=bottomBarOrientationChanged)
+    def bottomBarOrientation(self):
+        return self._bottom_bar_orientation
+       
     @Property(int, notify=backgroundBlurRadiusChanged)
     def backgroundBlurRadius(self):
         return self._background_blur_radius
@@ -430,6 +437,12 @@ class SettingsManager(QObject):
         # Emit signal WITHOUT parameters
         self.homeOBDParametersChanged.emit()  # Don't pass any parameters here
         
+    @Slot(str)
+    def save_bottom_bar_orientation(self, orientation):
+        print(f"Saving bottom bar orientation: {orientation}")
+        self._bottom_bar_orientation = orientation
+        self.update_setting("bottomBarOrientation", orientation, self.bottomBarOrientationChanged)
+        
     @Slot(result='QVariantList')
     def get_home_obd_parameters(self):
         """Return the list of OBD parameters to display on home screen"""
@@ -533,3 +546,5 @@ class SettingsManager(QObject):
         self._fuel_tank_capacity = self._default_settings["fuelTankCapacity"]
         self.fuelTankCapacityChanged.emit(self._fuel_tank_capacity)
             
+        self._bottom_bar_orientation = self._default_settings["bottomBarOrientation"]
+        self.bottomBarOrientationChanged.emit(self._bottom_bar_orientation)

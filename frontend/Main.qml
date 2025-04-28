@@ -25,6 +25,10 @@ ApplicationWindow {
     property int screenWidth: settingsManager ? settingsManager.screenWidth : 1280
     property int screenHeight: settingsManager ? settingsManager.screenHeight : 720
 
+    // Bottom bar orientation property
+    property bool isVerticalLayout: settingsManager ? 
+                                   settingsManager.bottomBarOrientation === "side" : false
+
     // Set initial window size
     width: screenWidth
     height: screenHeight
@@ -50,7 +54,11 @@ ApplicationWindow {
             if (mediaManager) {
                 mediaManager.connect_settings_manager(settingsManager)
             }
+
+            // Initialize orientation
+            isVerticalLayout = settingsManager.bottomBarOrientation === "side"
         }
+        
         // Load custom themes
         if (settingsManager) {
             let customThemes = settingsManager.customThemes
@@ -76,10 +84,11 @@ ApplicationWindow {
                 })
                 
                 // Force update of theme options
-                App.Style.customThemesUpdated() // Changed this line
+                App.Style.customThemesUpdated()
             })
         }
     }
+
     // Window resize handlers
     onWidthChanged: {
         if (settingsManager && width > 0 && width >= minimumWidth) {
@@ -121,41 +130,79 @@ ApplicationWindow {
                 theme = settingsManager.themeSetting
             }
         }
+        
+        function onBottomBarOrientationChanged() {
+            if (settingsManager) {
+                isVerticalLayout = settingsManager.bottomBarOrientation === "side"
+                // Force an update of the bottom bar
+                bottomBar.isVertical = isVerticalLayout
+                
+                // Force recalculation of z-order
+                stackView.z = 1
+                bottomBar.z = 0
+            }
+        }
     }
 
-    // Main stack view
-    StackView {
-        id: stackView
-        anchors {
-            left: parent.left
-            right: parent.right
-            top: parent.top
-            bottom: bottomBar.top
-        }
+    // Main layout container
+    Item {
+        anchors.fill: parent
         
-        initialItem: MainMenu {
+        // Main stack view with adaptive anchoring
+        StackView {
+            id: stackView
+            z: 1
+            
+            // Different anchoring based on orientation
+            anchors {
+                left: isVerticalLayout ? bottomBar.right : parent.left
+                right: parent.right
+                top: parent.top
+                bottom: isVerticalLayout ? parent.bottom : bottomBar.top
+            }
+            
+            initialItem: MainMenu {
+                stackView: stackView
+                windowWidth: mainWindow.width
+                windowHeight: mainWindow.height
+            }
+            
+            // Disable transitions for better performance
+            pushEnter: null
+            pushExit: null
+            popEnter: null
+            popExit: null
+            replaceEnter: null
+            replaceExit: null
+        }
+
+        // Bottom bar - positioning is handled internally in BottomBar.qml
+        BottomBar {
+            id: bottomBar
+            z: 0
             stackView: stackView
-            windowWidth: mainWindow.width
-            windowHeight: mainWindow.height
+            mainWindow: mainWindow
+            isVertical: isVerticalLayout
+            
+            // Force update on orientation change
+            onIsVerticalChanged: {
+                // Trigger a layout update
+                if (isVertical) {
+                    anchors.left = parent.left
+                    anchors.top = parent.top
+                    anchors.bottom = parent.bottom
+                    anchors.right = undefined
+                    width = parent.width * 0.1
+                } else {
+                    anchors.bottom = parent.bottom
+                    anchors.left = parent.left
+                    anchors.right = parent.right
+                    anchors.top = undefined
+                    height = parent.height * App.Spacing.bottomBarHeightPercent
+                }
+            }
         }
-        
-        // Disable transitions for better performance
-        pushEnter: null
-        pushExit: null
-        popEnter: null
-        popExit: null
-        replaceEnter: null
-        replaceExit: null
     }
-
-    // Bottom bar
-    BottomBar {
-        id: bottomBar
-        anchors.bottom: parent.bottom
-        stackView: stackView
-        mainWindow: mainWindow
-    }
-
 
     // Settings update functions
     function updateDeviceName(newDeviceName) {

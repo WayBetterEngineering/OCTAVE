@@ -6,6 +6,7 @@ import "." as App
 
 Item {
     id: settingsMenu
+    objectName: "settingsMenu"  // Add this line
     required property var stackView
     required property var mainWindow
     required property string initialSection
@@ -1430,10 +1431,8 @@ Item {
                                 })
                             }
 
-
-
-                             // UI Scaling slider
-                            ColumnLayout {
+                             
+                            ColumnLayout { // UI Scaling slider
                                 Layout.fillWidth: true
                                 spacing: App.Spacing.rowSpacing
                                 
@@ -1475,8 +1474,49 @@ Item {
 
                             SettingsDivider {}
 
-                            // Screen Dimensions
-                            ColumnLayout {
+                            ColumnLayout { //nav bar orientation
+                                Layout.fillWidth: true
+                                spacing: App.Spacing.rowSpacing
+                                
+                                SettingLabel {
+                                    text: "Bottom Bar Orientation"
+                                }
+                                
+                                SettingsSegmentedControl {
+                                    id: bottomBarOrientation
+                                    Layout.fillWidth: true
+                                    currentValue: settingsManager ? settingsManager.bottomBarOrientation : "bottom"
+                                    options: ["bottom", "side"]
+                                    
+                                    onSelected: function(value) {
+                                        if (settingsManager) {
+                                            settingsManager.save_bottom_bar_orientation(value)
+                                            
+                                            // Create a timer for a short delay
+                                            var timer = Qt.createQmlObject('import QtQuick 2.15; Timer {}', bottomBarOrientation);
+                                            timer.interval = 5;  // 250ms delay
+                                            timer.repeat = false;
+                                            timer.triggered.connect(function() {
+                                                stackView.replace(stackView.currentItem, "SettingsMenu.qml", {
+                                                    stackView: stackView,
+                                                    mainWindow: mainWindow,
+                                                    initialSection: currentSection  // Fixed typo here
+                                                });
+                                                timer.destroy();
+                                            });
+                                            timer.start();
+                                        }
+                                    }
+                                }
+                                
+                                SettingDescription {
+                                    text: "Choose whether the navigation bar appears at the bottom or side of the screen"
+                                }
+                            }
+
+                            SettingsDivider {}
+                            
+                            ColumnLayout { // Screen Dimensions
                                 Layout.fillWidth: true
                                 spacing: App.Spacing.rowSpacing
                                 
@@ -1574,8 +1614,8 @@ Item {
                             
                             SettingsDivider {}
                             
-                            // Theme Selection
-                            ColumnLayout {
+                            
+                            ColumnLayout { // Theme Selection
                                 Layout.fillWidth: true
                                 spacing: App.Spacing.rowSpacing
                                 
@@ -2844,7 +2884,6 @@ Item {
                             Item { Layout.fillHeight: true } // Spacer
                         }
                     }
-                    
                     
                     ScrollView { // OBD Settings Page
                         contentWidth: parent.width
