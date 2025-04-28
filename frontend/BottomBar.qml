@@ -74,14 +74,6 @@ Rectangle {
         }
     }
     
-    // Also connect to App.Spacing changes
-    Connections {
-        target: App.Spacing
-        function onDimensionsChanged() {
-            updateLayout()
-        }
-    }
-    
     gradient: Gradient {
         orientation: isVertical ? Gradient.Horizontal : Gradient.Vertical
         GradientStop { position: 1.5; color: App.Style.bottomBarGradientStart }
@@ -483,10 +475,15 @@ Rectangle {
                                     shuffleButton.isShuffleEnabled = mediaManager.is_shuffled()
                                 }
                             }
-                            
-                            MouseArea {
-                                anchors.fill: parent
-                                onClicked: popupSlider.open()
+                            Item {
+                                anchors.centerIn: parent
+                                width: parent.width * 1.5
+                                height: parent.height * 3.5
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    onClicked: popupSlider.open()
+                                }
                             }
 
                             Popup {
@@ -914,7 +911,6 @@ Rectangle {
                     }
                 }
                 
-
                 Item { // SECTION 3: Right section - Clock and other controls
                     Layout.preferredWidth: parent.width * 0.2 // Allocate 20% of space
                     Layout.fillHeight: true
@@ -1045,27 +1041,25 @@ Rectangle {
                     Layout.fillWidth: true
                     
                     ColumnLayout {
-                        anchors {
-                            top: parent.top
-                            topMargin: App.Spacing.overallMargin
-                            bottom: parent.bottom
-                            bottomMargin: App.Spacing.overallMargin
-                            horizontalCenter: parent.horizontalCenter
-                        }
-                        spacing: App.Spacing.bottomBarBetweenButtonMargin
-                        width: parent.width
+                        anchors.centerIn: parent
+                        spacing: App.Spacing.bottomBarBetweenButtonMargin * 4
                         
                         // ROW 1: Previous and Next buttons
                         RowLayout {
                             Layout.fillWidth: true
                             Layout.alignment: Qt.AlignHCenter
                             spacing: App.Spacing.bottomBarBetweenButtonMargin * 2
+
+                            Item {
+                                Layout.fillWidth: true
+                            }
                             
                             // Previous button
                             Control {
                                 id: previousButtonControlVertical
                                 Layout.preferredWidth: App.Spacing.bottomBarPreviousButtonWidth
                                 Layout.preferredHeight: App.Spacing.bottomBarPreviousButtonHeight
+                                Layout.alignment: Qt.AlignVCenter | Qt.AlignHCenter
                                 
                                 scale: mouseAreaPrevVertical.pressed ? 0.8 : 1.0
                                 opacity: mouseAreaPrevVertical.pressed ? 0.7 : 1.0
@@ -1108,8 +1102,8 @@ Rectangle {
                                 
                                 Item {
                                     anchors.centerIn: parent
-                                    width: parent.width * 1.5
-                                    height: parent.height * 2.5   
+                                    width: parent.width 
+                                    height: parent.height * 2
 
                                     MouseArea {
                                         id: mouseAreaPrevVertical
@@ -1124,6 +1118,7 @@ Rectangle {
                                 id: nextButtonControlVertical
                                 Layout.preferredWidth: App.Spacing.bottomBarNextButtonWidth
                                 Layout.preferredHeight: App.Spacing.bottomBarNextButtonHeight
+                                Layout.alignment: Qt.AlignVCenter | Qt.AlignHCenter
 
                                 scale: mouseAreaNextVertical.pressed ? 0.8 : 1.0
                                 opacity: mouseAreaNextVertical.pressed ? 0.7 : 1.0
@@ -1166,8 +1161,8 @@ Rectangle {
                                 
                                 Item {
                                     anchors.centerIn: parent
-                                    width: parent.width * 1.5
-                                    height: parent.height * 2.5
+                                    width: parent.width
+                                    height: parent.height * 2
                                 
                                     MouseArea {
                                         id: mouseAreaNextVertical
@@ -1175,6 +1170,10 @@ Rectangle {
                                         onClicked: mediaManager.next_track()
                                     }
                                 }
+                            }
+                            
+                            Item {
+                                Layout.fillWidth: true
                             }
                         }
                         
@@ -1227,8 +1226,8 @@ Rectangle {
                             
                             Item {
                                 anchors.centerIn: parent
-                                width: parent.width * 1.5
-                                height: parent.height * 2.5
+                                width: parent.width * 3
+                                height: parent.height 
 
                                 MouseArea {
                                     id: mouseAreaPlayVertical
@@ -1292,8 +1291,8 @@ Rectangle {
 
                             Item {
                                 anchors.centerIn: parent
-                                width: parent.width * 1.5
-                                height: parent.height * 2.5
+                                width: parent.width * 3
+                                height: parent.height
 
                                 MouseArea {
                                     id: mouseAreaShuffleVertical
@@ -1303,263 +1302,249 @@ Rectangle {
                             }
                         }
                         
-                        // ROW 3: Mute button and Volume control
-                        RowLayout {
-                            Layout.fillWidth: true
+                        // Mute button
+                        Control {
+                            id: muteButtonVertical
+                            property bool isMuted: false
                             Layout.alignment: Qt.AlignHCenter
-                            spacing: App.Spacing.bottomBarBetweenButtonMargin * 2
+                            Layout.preferredWidth: App.Spacing.bottomBarMuteButtonWidth
+                            Layout.preferredHeight: App.Spacing.bottomBarMuteButtonHeight
                             
-                            // Left spacer for better centering
+                            scale: mouseAreaMuteVertical.pressed ? 0.8 : 1.0
+                            opacity: mouseAreaMuteVertical.pressed ? 0.7 : 1.0
+                            
+                            Behavior on scale {
+                                NumberAnimation {
+                                    duration: 200
+                                    easing.type: Easing.OutBack  
+                                    easing.overshoot: 1.1
+                                }
+                            }
+                            
+                            Behavior on opacity {
+                                NumberAnimation { duration: 150 }
+                            }
+
+                            background: Rectangle { color: "transparent" }
+                            
+                            contentItem: Item {
+                                Image {
+                                    id: muteButtonImageVertical
+                                    anchors.centerIn: parent
+                                    width: parent.width  
+                                    height: parent.height
+                                    source: getUpdatedMuteSourceVertical()
+                                    sourceSize: Qt.size(width * 2, height * 2)
+                                    fillMode: Image.PreserveAspectFit
+                                    smooth: true
+                                    antialiasing: true
+                                    mipmap: true
+                                    visible: false
+                                }
+                                
+                                ColorOverlay {
+                                    anchors.fill: muteButtonImageVertical
+                                    source: muteButtonImageVertical
+                                    color: App.Style.bottomBarVolumeButton
+                                }
+                            }
+                            
                             Item {
-                                Layout.fillWidth: true
-                                Layout.preferredWidth: 10
-                            }
+                                anchors.centerIn: parent
+                                width: parent.width * 3
+                                height: parent.height 
                             
-                            // Mute button
-                            Control {
-                                id: muteButtonVertical
-                                property bool isMuted: false
-                                Layout.preferredWidth: App.Spacing.bottomBarMuteButtonWidth
-                                Layout.preferredHeight: App.Spacing.bottomBarMuteButtonHeight
-                                Layout.rightMargin: 8  // Push mute button more to the left
-                                
-                                scale: mouseAreaMuteVertical.pressed ? 0.8 : 1.0
-                                opacity: mouseAreaMuteVertical.pressed ? 0.7 : 1.0
-                                
-                                Behavior on scale {
-                                    NumberAnimation {
-                                        duration: 200
-                                        easing.type: Easing.OutBack  
-                                        easing.overshoot: 1.1
-                                    }
-                                }
-                                
-                                Behavior on opacity {
-                                    NumberAnimation { duration: 150 }
-                                }
-
-                                background: Rectangle { color: "transparent" }
-                                
-                                contentItem: Item {
-                                    Image {
-                                        id: muteButtonImageVertical
-                                        anchors.centerIn: parent
-                                        width: parent.width  
-                                        height: parent.height
-                                        source: getUpdatedMuteSource()
-                                        sourceSize: Qt.size(width * 2, height * 2)
-                                        fillMode: Image.PreserveAspectFit
-                                        smooth: true
-                                        antialiasing: true
-                                        mipmap: true
-                                        visible: false
-                                    }
-                                    
-                                    ColorOverlay {
-                                        anchors.fill: muteButtonImageVertical
-                                        source: muteButtonImageVertical
-                                        color: App.Style.bottomBarVolumeButton
-                                    }
-                                }
-                                
-                                Item {
-                                    anchors.centerIn: parent
-                                    width: parent.width * 1.5
-                                    height: parent.height * 2.5
-                                
-                                    MouseArea {
-                                        id: mouseAreaMuteVertical
-                                        anchors.fill: parent 
-                                        onClicked: {
-                                            muteButtonVertical.isMuted = !muteButtonVertical.isMuted
-                                            mediaManager.toggle_mute()
-                                        }
+                                MouseArea {
+                                    id: mouseAreaMuteVertical
+                                    anchors.fill: parent 
+                                    onClicked: {
+                                        muteButtonVertical.isMuted = !muteButtonVertical.isMuted
+                                        mediaManager.toggle_mute()
                                     }
                                 }
                             }
+                        }
+                        
+                        // Volume control with better alignment
+                        Control {
+                            id: volumeControlVertical
+                            Layout.alignment: Qt.AlignHCenter
+                            Layout.preferredWidth: App.Spacing.bottomBarVolumeSliderWidth * 0.8
+                            Layout.preferredHeight: App.Spacing.bottomBarVolumeSliderHeight
                             
-                            // Volume control with better alignment
-                            Control {
-                                id: volumeControlVertical
-                                Layout.preferredWidth: App.Spacing.bottomBarVolumeSliderWidth * 0.8
-                                Layout.preferredHeight: App.Spacing.bottomBarVolumeSliderHeight
-                                Layout.leftMargin: -10  // Shift volume text to the left
-                                
-                                property int currentValue: 0
-                                
-                                Text {
-                                    id: volumeTextVertical
-                                    anchors.centerIn: parent
-                                    text: volumeControlVertical.currentValue + "%"
-                                    color: App.Style.primaryTextColor
-                                    font.pixelSize: App.Spacing.bottomBarVolumeText
-                                    font.bold: true
-                                    anchors.horizontalCenterOffset: -2  // Further adjust text position
+                            property int currentValue: 0
+                            
+                            Text {
+                                id: volumeTextVertical
+                                anchors.centerIn: parent
+                                text: volumeControlVertical.currentValue + "%"
+                                color: App.Style.primaryTextColor
+                                font.pixelSize: App.Spacing.bottomBarVolumeText
+                                font.bold: true
+                                anchors.horizontalCenterOffset: -2  // Further adjust text position
+                            }
+                            
+                            Component.onCompleted: {
+                                if (settingsManager) {
+                                    var volumeValue = settingsManager.startUpVolume
+                                    currentValue = Math.round(Math.sqrt(volumeValue) * 100)
+                                    mediaManager.setVolume(volumeValue)
+                                } else {
+                                    currentValue = 10
+                                    mediaManager.setVolume(0.1)
                                 }
                                 
-                                Component.onCompleted: {
-                                    if (settingsManager) {
-                                        var volumeValue = settingsManager.startUpVolume
-                                        currentValue = Math.round(Math.sqrt(volumeValue) * 100)
-                                        mediaManager.setVolume(volumeValue)
-                                    } else {
-                                        currentValue = 10
-                                        mediaManager.setVolume(0.1)
-                                    }
-                                    
-                                    updateMuteButtonImageVertical()
+                                updateMuteButtonImageVertical()
 
-                                    if (mediaManager) {
-                                        shuffleButtonVertical.isShuffleEnabled = mediaManager.is_shuffled()
-                                    }
+                                if (mediaManager) {
+                                    shuffleButtonVertical.isShuffleEnabled = mediaManager.is_shuffled()
                                 }
-                                
+                            }
+                            Item {
+                                anchors.centerIn: parent
+                                width: parent.width*3 
+                                height: parent.height
+
                                 MouseArea {
                                     anchors.fill: parent
                                     onClicked: popupSliderVertical.open()
                                 }
+                            }
 
-                                Popup {
-                                    id: popupSliderVertical
-                                    width: parent.Window.width
-                                    height: 140
-                                    anchors.centerIn: Overlay.overlay
-                                    modal: true
-                                    focus: true
-                                    closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+                            Popup {
+                                id: popupSliderVertical
+                                width: parent.Window.width
+                                height: 140
+                                anchors.centerIn: Overlay.overlay
+                                modal: true
+                                focus: true
+                                closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+                                
+                                // Simple background
+                                background: Rectangle {
+                                    color: App.Style.backgroundColor
+                                    radius: 8
+                                    border.color: App.Style.accent
+                                    border.width: 1
+                                }
+                                
+                                // Content with centered slider
+                                contentItem: Item {
+                                    anchors.fill: parent
                                     
-                                    // Simple background
-                                    background: Rectangle {
-                                        color: App.Style.backgroundColor
-                                        radius: 8
-                                        border.color: App.Style.accent
-                                        border.width: 1
+                                    // Larger percentage display
+                                    Label {
+                                        id: percentLabelVertical
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                        anchors.top: parent.top
+                                        anchors.topMargin: 15
+                                        text: Math.round(volumeSliderVertical.value) + "%"
+                                        color: App.Style.accent
+                                        font.pixelSize: 32
+                                        font.bold: true
                                     }
                                     
-                                    // Content with centered slider
-                                    contentItem: Item {
-                                        anchors.fill: parent
+                                    // Container for the slider - centered in the popup
+                                    Item {
+                                        id: sliderContainerVertical
+                                        anchors.top: percentLabelVertical.bottom
+                                        anchors.topMargin: 15
+                                        anchors.left: parent.left
+                                        anchors.right: parent.right
+                                        anchors.bottom: parent.bottom
+                                        anchors.bottomMargin: 15
                                         
-                                        // Larger percentage display
-                                        Label {
-                                            id: percentLabelVertical
-                                            anchors.horizontalCenter: parent.horizontalCenter
-                                            anchors.top: parent.top
-                                            anchors.topMargin: 15
-                                            text: Math.round(volumeSliderVertical.value) + "%"
-                                            color: App.Style.accent
-                                            font.pixelSize: 32
-                                            font.bold: true
-                                        }
-                                        
-                                        // Container for the slider - centered in the popup
-                                        Item {
-                                            id: sliderContainerVertical
-                                            anchors.top: percentLabelVertical.bottom
-                                            anchors.topMargin: 15
-                                            anchors.left: parent.left
-                                            anchors.right: parent.right
-                                            anchors.bottom: parent.bottom
-                                            anchors.bottomMargin: 15
+                                        // Simplified slider
+                                        Slider {
+                                            id: volumeSliderVertical
+                                            anchors.centerIn: parent
+                                            width: parent.width * 0.95
+                                            height: 50
+                                            from: 0
+                                            to: 100
+                                            stepSize: 1
+                                            value: volumeControlVertical.currentValue
                                             
-                                            // Simplified slider
-                                            Slider {
-                                                id: volumeSliderVertical
-                                                anchors.centerIn: parent
-                                                width: parent.width * 0.95
-                                                height: 50
-                                                from: 0
-                                                to: 100
-                                                stepSize: 1
-                                                value: volumeControlVertical.currentValue
+                                            // Simple slider background
+                                            background: Rectangle {
+                                                x: volumeSliderVertical.leftPadding
+                                                y: volumeSliderVertical.topPadding + volumeSliderVertical.availableHeight / 2 - height / 2
+                                                width: volumeSliderVertical.availableWidth
+                                                height: 16
+                                                radius: 8
+                                                color: App.Style.hoverColor
                                                 
-                                                // Simple slider background
-                                                background: Rectangle {
-                                                    x: volumeSliderVertical.leftPadding
-                                                    y: volumeSliderVertical.topPadding + volumeSliderVertical.availableHeight / 2 - height / 2
-                                                    width: volumeSliderVertical.availableWidth
-                                                    height: 16
+                                                // Filled portion
+                                                Rectangle {
+                                                    width: volumeSliderVertical.visualPosition * parent.width
+                                                    height: parent.height
+                                                    color: App.Style.volumeSliderColor
                                                     radius: 8
-                                                    color: App.Style.hoverColor
-                                                    
-                                                    // Filled portion
-                                                    Rectangle {
-                                                        width: volumeSliderVertical.visualPosition * parent.width
-                                                        height: parent.height
-                                                        color: App.Style.volumeSliderColor
-                                                        radius: 8
-                                                    }
-                                                }
-                                                
-                                                // Larger handle for better touch
-                                                handle: Rectangle {
-                                                    x: volumeSliderVertical.leftPadding + volumeSliderVertical.visualPosition * (volumeSliderVertical.availableWidth - width)
-                                                    y: volumeSliderVertical.topPadding + volumeSliderVertical.availableHeight / 2 - height / 2
-                                                    width: 40
-                                                    height: 40
-                                                    radius: 20  // Circular handle
-                                                    color: App.Style.accent
-                                                }
-                                                
-                                                // The core functionality
-                                                onValueChanged: {
-                                                    volumeControlVertical.currentValue = value
-                                                    var normalizedValue = value / 100
-                                                    var logVolume = Math.pow(normalizedValue, 2.0)
-                                                    mediaManager.setVolume(logVolume)
-                                                    
-                                                    if (value > 0 && muteButtonVertical.isMuted) {
-                                                        muteButtonVertical.isMuted = false
-                                                        mediaManager.toggle_mute()
-                                                    }
-                                                    updateMuteButtonImageVertical()
                                                 }
                                             }
                                             
-                                            // Circular touch area
-                                            Item {
-                                                id: touchAreaContainerVertical
-                                                anchors.centerIn: sliderContainerVertical
-                                                width: sliderContainerVertical.width
-                                                height: sliderContainerVertical.height
+                                            // Larger handle for better touch
+                                            handle: Rectangle {
+                                                x: volumeSliderVertical.leftPadding + volumeSliderVertical.visualPosition * (volumeSliderVertical.availableWidth - width)
+                                                y: volumeSliderVertical.topPadding + volumeSliderVertical.availableHeight / 2 - height / 2
+                                                width: 40
+                                                height: 40
+                                                radius: 20  // Circular handle
+                                                color: App.Style.accent
+                                            }
+                                            
+                                            // The core functionality
+                                            onValueChanged: {
+                                                volumeControlVertical.currentValue = value
+                                                var normalizedValue = value / 100
+                                                var logVolume = Math.pow(normalizedValue, 2.0)
+                                                mediaManager.setVolume(logVolume)
                                                 
-                                                // Create multiple circular touch areas along the slider track
-                                                Repeater {
-                                                    model: 9  // Create 9 touch areas along the slider
+                                                if (value > 0 && muteButtonVertical.isMuted) {
+                                                    muteButtonVertical.isMuted = false
+                                                    mediaManager.toggle_mute()
+                                                }
+                                                updateMuteButtonImageVertical()
+                                            }
+                                        }
+                                        
+                                        // Circular touch area
+                                        Item {
+                                            id: touchAreaContainerVertical
+                                            anchors.centerIn: sliderContainerVertical
+                                            width: sliderContainerVertical.width
+                                            height: sliderContainerVertical.height
+                                            
+                                            // Create multiple circular touch areas along the slider track
+                                            Repeater {
+                                                model: 9  // Create 9 touch areas along the slider
+                                                
+                                                // Each touch area is a circular MouseArea
+                                                MouseArea {
+                                                    // Position touch areas evenly along the slider
+                                                    x: (index * (volumeSliderVertical.width / 8)) - width/2 + volumeSliderVertical.x
+                                                    y: volumeSliderVertical.y + volumeSliderVertical.height/2 - height/2
+                                                    width: 80  // Large circular area
+                                                    height: 80
                                                     
-                                                    // Each touch area is a circular MouseArea
-                                                    MouseArea {
-                                                        // Position touch areas evenly along the slider
-                                                        x: (index * (volumeSliderVertical.width / 8)) - width/2 + volumeSliderVertical.x
-                                                        y: volumeSliderVertical.y + volumeSliderVertical.height/2 - height/2
-                                                        width: 80  // Large circular area
-                                                        height: 80
-                                                        
-                                                        // Handle touch interactions
-                                                        onMouseXChanged: {
-                                                            if (pressed) {
-                                                                // Calculate global position relative to the slider
-                                                                var globalX = mapToItem(volumeSliderVertical, mouseX, mouseY).x
-                                                                var newPosition = Math.max(0, Math.min(1, 
-                                                                    (globalX - volumeSliderVertical.leftPadding) / volumeSliderVertical.availableWidth))
-                                                                volumeSliderVertical.value = newPosition * 100
-                                                            }
+                                                    // Handle touch interactions
+                                                    onMouseXChanged: {
+                                                        if (pressed) {
+                                                            // Calculate global position relative to the slider
+                                                            var globalX = mapToItem(volumeSliderVertical, mouseX, mouseY).x
+                                                            var newPosition = Math.max(0, Math.min(1, 
+                                                                (globalX - volumeSliderVertical.leftPadding) / volumeSliderVertical.availableWidth))
+                                                            volumeSliderVertical.value = newPosition * 100
                                                         }
-                                                        
-                                                        // Allow slider to receive events too
-                                                        preventStealing: false
                                                     }
+                                                    
+                                                    // Allow slider to receive events too
+                                                    preventStealing: false
                                                 }
                                             }
                                         }
                                     }
                                 }
-                            }
-                            
-                            // Right spacer for better centering of the whole layout
-                            Item {
-                                Layout.fillWidth: true
-                                Layout.preferredWidth: 10
                             }
                         }
                     }
@@ -1870,7 +1855,7 @@ Rectangle {
                                 visible: settingsManager ? settingsManager.showClock : true
                                 font.pixelSize: settingsManager ? settingsManager.clockSize : 18
                                 color: App.Style.clockTextColor
-                                text: clockText.text  // Get the time from the horizontal layout
+                                text: clockTextVertical.text  // Get the time from the horizontal layout
                             }
                             
                             MouseArea {
@@ -1895,7 +1880,7 @@ Rectangle {
                 }
                 
                 function getUpdatedMuteSourceVertical() {
-                    if (mediaManager.is_muted() || muteButtonVertical.isMuted || volumeSliderVertical.value === 0) {
+                    if (mediaManager.is_muted() || muteButtonImageVertical.isMuted || volumeSliderVertical.value === 0) {
                         return "./assets/mute_on.svg"
                     }
                     const volume = volumeControlVertical.currentValue

@@ -6,8 +6,8 @@
     "showClock": true,
     "clockSize": 35,
     "backgroundGrid": "2x2",
-    "screenWidth": 1707,
-    "screenHeight": 889,
+    "screenWidth": 1552,
+    "screenHeight": 751,
     "backgroundBlurRadius": 7,
     "uiScale": 0.7,
     "obdParameters": {
@@ -47,5 +47,5 @@
         "SPEED"
     ],
     "customThemes": {},
-    "bottomBarOrientation": "side"
+    "bottomBarOrientation": "bottom"
 }
