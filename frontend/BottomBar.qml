@@ -1403,7 +1403,7 @@ Rectangle {
                             Item {
                                 anchors.centerIn: parent
                                 width: parent.width*3 
-                                height: parent.height
+                                height: parent.height*2
 
                                 MouseArea {
                                     anchors.fill: parent
@@ -1562,7 +1562,7 @@ Rectangle {
                         // Home Button
                         Control {
                             id: homeButtonVertical
-                            implicitWidth: App.Spacing.bottomBarNavButtonWidth
+                            implicitWidth: App.Spacing.bottomBarNavButtonWidth*1.5
                             implicitHeight: App.Spacing.bottomBarNavButtonHeight
                             Layout.alignment: Qt.AlignHCenter
                             
@@ -1624,7 +1624,7 @@ Rectangle {
                         // OBD Button
                         Control {
                             id: obdButtonVertical
-                            implicitWidth: App.Spacing.bottomBarNavButtonWidth
+                            implicitWidth: App.Spacing.bottomBarNavButtonWidth*1.5
                             implicitHeight: App.Spacing.bottomBarNavButtonHeight
                             Layout.alignment: Qt.AlignHCenter
                             
@@ -1694,7 +1694,7 @@ Rectangle {
                         // Media Button
                         Control {
                             id: mediaButtonVertical
-                            implicitWidth: App.Spacing.bottomBarNavButtonWidth
+                            implicitWidth: App.Spacing.bottomBarNavButtonWidth*1.5
                             implicitHeight: App.Spacing.bottomBarNavButtonHeight
                             Layout.alignment: Qt.AlignHCenter
                             
@@ -1758,7 +1758,7 @@ Rectangle {
                         // Settings Button
                         Control {
                             id: settingsButtonVertical
-                            implicitWidth: App.Spacing.bottomBarNavButtonWidth
+                            implicitWidth: App.Spacing.bottomBarNavButtonWidth*1.5
                             implicitHeight: App.Spacing.bottomBarNavButtonHeight
                             Layout.alignment: Qt.AlignHCenter
                             
@@ -1880,13 +1880,17 @@ Rectangle {
                 }
                 
                 function getUpdatedMuteSourceVertical() {
-                    if (mediaManager.is_muted() || muteButtonImageVertical.isMuted || volumeSliderVertical.value === 0) {
+                    if (mediaManager.is_muted() || muteButtonVertical.isMuted || volumeControlVertical.currentValue === 0) {
                         return "./assets/mute_on.svg"
                     }
                     const volume = volumeControlVertical.currentValue
-                    if (volume < 20) return "./assets/mute_off_med.svg"
-                    if (volume > 90) return "./assets/mute_off_low.svg"
-                    return "./assets/mute_off_low.svg"
+                    if (volume < 33) {
+                        return "./assets/mute_off_low.svg"
+                    } else if (volume < 66) {
+                        return "./assets/mute_off_med.svg"
+                    } else {
+                        return "./assets/mute_off_high.svg"
+                    }
                 }
                 
                 // Connections for vertical layout
@@ -1905,7 +1909,7 @@ Rectangle {
                     }
                     function onMuteChanged(muted) {
                         muteButtonVertical.isMuted = muted
-                        updateMuteButtonImageVertical.source = getUpdatedMuteSourceVertical()
+                        updateMuteButtonImageVertical()
                     }
                     function onVolumeChanged(volume) {
                         // Update volume text in vertical layout

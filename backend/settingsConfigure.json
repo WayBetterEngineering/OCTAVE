@@ -5,10 +5,10 @@
     "clockFormat24Hour": false,
     "showClock": true,
     "clockSize": 35,
-    "backgroundGrid": "2x2",
-    "screenWidth": 1552,
-    "screenHeight": 751,
-    "backgroundBlurRadius": 7,
+    "backgroundGrid": "Normal",
+    "screenWidth": 1269,
+    "screenHeight": 679,
+    "backgroundBlurRadius": 15,
     "uiScale": 0.7,
     "obdParameters": {
         "COOLANT_TEMP": true,
@@ -34,7 +34,7 @@
     },
     "obdBluetoothPort": "/dev/rfcomm0",
     "obdFastMode": true,
-    "mediaFolder": "C:\\Users\\Robde\\Music\\The Great Outdoors",
+    "mediaFolder": "C:\\Users\\Redto\\Music",
     "showBackgroundOverlay": true,
     "fuelTankCapacity": 19.0,
     "directoryHistory": [
@@ -44,8 +44,10 @@
     ],
     "homeOBDParameters": [
         "ENGINE_LOAD",
-        "SPEED"
+        "SPEED",
+        "INTAKE_TEMP",
+        "RPM"
     ],
     "customThemes": {},
-    "bottomBarOrientation": "bottom"
+    "bottomBarOrientation": "side"
 }

@@ -97,7 +97,7 @@ Item {
                                 radius: settingsManager ? settingsManager.backgroundBlurRadius : 40
                                 samples: Math.min(32, Math.max(1, radius))  // Adjust samples based on radius
                                 deviation: radius / 2.5
-                                transparentBorder: true
+                                transparentBorder: false
                                 cached: true  // Add caching for better performance
                             }
                         }
@@ -252,8 +252,7 @@ Item {
             }
         }
 
-        // Volume control at top
-        Rectangle {
+        Rectangle { // Volume control at top
             id: topVolumeControl
             width: parent.width * 0.75
             height: App.Spacing.mediaRoomDurationBarHeight
@@ -459,11 +458,14 @@ Item {
             width: App.Spacing.applicationWidth * App.Spacing.mediaRoomControlsContainerWidth
             height: App.Spacing.applicationHeight * App.Spacing.mediaRoomControlsContainerHeight
             anchors {
+                top: topVolumeControl.bottom
                 bottom: durationBar.top
                 horizontalCenter: parent.horizontalCenter
+                // Use verticalCenter to ensure it's centered between the two elements
                 margins: App.Spacing.mediaRoomMargin
             }
             color: transparentColor
+        
 
             RowLayout {
                 anchors.fill: parent
@@ -482,7 +484,7 @@ Item {
                         Layout.alignment: Qt.AlignHCenter
                         spacing: App.Spacing.mediaRoomBetweenButton
 
-                        Control {  //Previous button
+                        Control { //Previous button
                             id: previousControl
                             implicitHeight: App.Spacing.mediaRoomPreviousButtonHeight
                             implicitWidth: App.Spacing.mediaRoomPreviousButtonWidth

@@ -19,7 +19,7 @@ QtObject {
     // ===== Core percentage values =====
     // Base sizing percentages
     property real overallMarginPercent: 0.01
-    property real overallTextPercent: 0.035
+    property real overallTextPercent: 0.045
     property real overallSpacingPercent: .05
     property real overallSliderWidthPercent: 0.06
     property real overallSliderHeightPercent: 0.06
