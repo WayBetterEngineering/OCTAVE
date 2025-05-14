@@ -273,15 +273,14 @@ Item {
             }
             
             // Home icon with better visibility
-            Text {
+            Image {
+                id: homeIcon
                 anchors.centerIn: parent
-                text: control.isActive ? "🏠" : "⌂"
-                font.pixelSize: 24
-                color: control.isActive ? App.Style.accent : App.Style.secondaryTextColor
-                
-                // Small animation on click
-                scale: homeButtonArea.pressed ? 0.9 : 1.0
-                Behavior on scale { NumberAnimation { duration: 100 } }
+                source: "assets/home_button.svg"
+                width: App.Spacing.settingsButtonHeight * .3
+                height: App.Spacing.settingsButtonHeight * .3
+                sourceSize.width: App.Spacing.settingsButtonHeight * .3
+                sourceSize.height: App.Spacing.settingsButtonHeight * .3
             }
         }
         
@@ -1442,8 +1441,8 @@ Item {
                                 
                                 SettingsSlider {
                                     id: uiScaleSlider
-                                    from: 0.7
-                                    to: 1.5
+                                    from: 0.2
+                                    to: 1.2
                                     stepSize: 0.05
                                     value: App.Spacing.globalScale
                                     
@@ -3290,153 +3289,7 @@ Item {
                             
                             SettingsDivider {}
                             
-                            // Home Screen OBD Display
-                            ColumnLayout {
-                                Layout.fillWidth: true
-                                spacing: App.Spacing.rowSpacing
-                                
-                                SettingLabel {
-                                    text: "Home Screen OBD Display"
-                                }
-                                
-                                SettingDescription {
-                                    text: "Select up to 4 parameters to display on the home screen"
-                                }
-                                
-                                // Current Home Parameters Visual Display - Improved
-                                Rectangle {
-                                    Layout.fillWidth: true
-                                    Layout.preferredHeight: 100
-                                    color: Qt.rgba(App.Style.accent.r, App.Style.accent.g, App.Style.accent.b, 0.1)
-                                    radius: 4
-                                    border.color: App.Style.accent
-                                    border.width: 1
-                                    
-                                    RowLayout {
-                                        anchors.fill: parent
-                                        anchors.margins: 12
-                                        spacing: 12
-                                        
-                                        // Currently selected parameters
-                                        Repeater {
-                                            id: homeParametersRepeater
-                                            model: settingsManager ? settingsManager.get_home_obd_parameters() : []
-                                            
-                                            delegate: Rectangle {
-                                                Layout.fillHeight: true
-                                                Layout.fillWidth: true
-                                                color: Qt.rgba(App.Style.accent.r, App.Style.accent.g, App.Style.accent.b, 0.2)
-                                                radius: 6
-                                                border.color: App.Style.accent
-                                                border.width: 1
-                                                
-                                                // Display name mapping
-                                                property string displayName: {
-                                                    const paramNames = {
-                                                        "SPEED": "Speed",
-                                                        "RPM": "RPM",
-                                                        "COOLANT_TEMP": "Temperature",
-                                                        "CONTROL_MODULE_VOLTAGE": "Voltage",
-                                                        "ENGINE_LOAD": "Load",
-                                                        "THROTTLE_POS": "Throttle",
-                                                        "INTAKE_TEMP": "Intake Temp",
-                                                        "TIMING_ADVANCE": "Timing",
-                                                        "MAF": "Air Flow",
-                                                        "COMMANDED_EQUIV_RATIO": "AFR",
-                                                        "FUEL_LEVEL": "Fuel",
-                                                        "INTAKE_PRESSURE": "MAP",
-                                                        "SHORT_FUEL_TRIM_1": "STFT",
-                                                        "LONG_FUEL_TRIM_1": "LTFT",
-                                                        "O2_B1S1": "O2",
-                                                        "FUEL_PRESSURE": "Fuel Press",
-                                                        "OIL_TEMP": "Oil Temp",
-                                                        "IGNITION_TIMING": "Ignition"
-                                                    };
-                                                    return paramNames[modelData] || modelData;
-                                                }
-                                                
-                                                ColumnLayout {
-                                                    anchors.centerIn: parent
-                                                    spacing: 4
-                                                    
-                                                    // Home icon
-                                                    Text {
-                                                        text: "🏠"
-                                                        font.pixelSize: 20
-                                                        Layout.alignment: Qt.AlignHCenter
-                                                    }
-                                                    
-                                                    // Parameter name
-                                                    Text {
-                                                        text: displayName
-                                                        font.pixelSize: 16
-                                                        color: App.Style.primaryTextColor
-                                                        Layout.alignment: Qt.AlignHCenter
-                                                    }
-                                                }
-                                                
-                                                // Visual feedback on hover
-                                                Rectangle {
-                                                    anchors.fill: parent
-                                                    radius: 6
-                                                    color: removeArea.containsMouse ? Qt.rgba(1, 0, 0, 0.1) : "transparent"
-                                                }
-                                                
-                                                // Remove parameter on click
-                                                MouseArea {
-                                                    id: removeArea
-                                                    anchors.fill: parent
-                                                    hoverEnabled: true
-                                                    onClicked: {
-                                                        removeConfirmDialog.paramToRemove = modelData;
-                                                        removeConfirmDialog.open();
-                                                    }
-                                                }
-                                            }
-                                        }
-                                        
-                                        // Empty slots
-                                        Repeater {
-                                            id: homeParametersEmptyRepeater
-                                            model: Math.max(0, 4 - (settingsManager ? settingsManager.get_home_obd_parameters().length : 0))
-                                            
-                                            delegate: Rectangle {
-                                                Layout.fillHeight: true
-                                                Layout.fillWidth: true
-                                                color: Qt.rgba(App.Style.primaryTextColor.r, App.Style.primaryTextColor.g, App.Style.primaryTextColor.b, 0.05)
-                                                radius: 6
-                                                border.color: Qt.rgba(App.Style.primaryTextColor.r, App.Style.primaryTextColor.g, App.Style.primaryTextColor.b, 0.2)
-                                                border.width: 1
-                                                
-                                                Text {
-                                                    anchors.centerIn: parent
-                                                    text: "Empty"
-                                                    color: Qt.rgba(App.Style.primaryTextColor.r, App.Style.primaryTextColor.g, App.Style.primaryTextColor.b, 0.5)
-                                                    font.pixelSize: 16
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                                // Add this right after the home parameters display
-                                Connections {
-                                    target: settingsManager
-                                    function onHomeOBDParametersChanged() {
-                                        // Force refresh home parameters display
-                                        homeParametersRepeater.model = [];
-                                        Qt.callLater(function() {
-                                            if (settingsManager) {
-                                                homeParametersRepeater.model = settingsManager.get_home_obd_parameters();
-                                                homeParametersEmptyRepeater.model = Math.max(0, 4 - (settingsManager ? settingsManager.get_home_obd_parameters().length : 0));
-                                            }
-                                        });
-                                    }
-                                }
-                            }
-                            
-                            SettingsDivider {}
-                            
-                            // Parameter selection section
+                            // Parameter selection
                             ColumnLayout {
                                 id: parameterSelectionLayout
                                 Layout.fillWidth: true
@@ -3446,7 +3299,7 @@ Item {
                                     text: "OBD Parameters"
                                 }
                                 
-                                // Controls row (Select All button and counter)
+                                // Controls row (Select All and Deselect All buttons)
                                 RowLayout {
                                     Layout.fillWidth: true
                                     Layout.bottomMargin: 10
@@ -3455,45 +3308,112 @@ Item {
                                     Button {
                                         id: selectAllButton
                                         text: "Select All"
-                                        implicitHeight: 35
+                                        implicitHeight: App.Spacing.overallSpacing * 2
                                         
-                                        // Track if all items are selected
-                                        property bool allSelected: false
+                                        // Add click animation
+                                        scale: selectAllMouseArea.pressed ? 0.95 : 1.0
+                                        opacity: selectAllMouseArea.pressed ? 0.8 : 1.0
+                                        
+                                        Behavior on scale {
+                                            NumberAnimation {
+                                                duration: 100
+                                                easing.type: Easing.OutBack
+                                            }
+                                        }
+                                        
+                                        Behavior on opacity {
+                                            NumberAnimation { duration: 100 }
+                                        }
                                         
                                         background: Rectangle {
-                                            color: selectAllButton.pressed ? Qt.darker(App.Style.accent, 1.4) : 
-                                                selectAllButton.hovered ? Qt.darker(App.Style.accent, 1.2) : 
-                                                App.Style.accent
+                                            color: App.Style.accent
                                             radius: 4
                                         }
                                         
                                         contentItem: Text {
                                             text: selectAllButton.text
-                                            color: "#ffffff"
-                                            font.pixelSize: App.Spacing.overallText * 0.9
+                                            color: App.Style.primaryTextColor
+                                            font.pixelSize: App.Spacing.overallText
                                             horizontalAlignment: Text.AlignHCenter
                                             verticalAlignment: Text.AlignVCenter
                                         }
                                         
-                                        onClicked: {
-                                            // Toggle select all / deselect all
-                                            allSelected = !allSelected;
-                                            text = allSelected ? "Deselect All" : "Select All";
-                                            
-                                            // Apply to all parameters
-                                            if (settingsManager) {
-                                                const parameterList = [
-                                                    "COOLANT_TEMP", "CONTROL_MODULE_VOLTAGE", "ENGINE_LOAD", 
-                                                    "THROTTLE_POS", "INTAKE_TEMP", "TIMING_ADVANCE",
-                                                    "MAF", "SPEED", "RPM", "COMMANDED_EQUIV_RATIO",
-                                                    "FUEL_LEVEL", "INTAKE_PRESSURE", "SHORT_FUEL_TRIM_1",
-                                                    "LONG_FUEL_TRIM_1", "O2_B1S1", "FUEL_PRESSURE",
-                                                    "OIL_TEMP", "IGNITION_TIMING"
-                                                ];
-                                                
-                                                parameterList.forEach(function(param) {
-                                                    settingsManager.save_obd_parameter_enabled(param, allSelected);
-                                                });
+                                        MouseArea {
+                                            id: selectAllMouseArea
+                                            anchors.fill: parent
+                                            onClicked: {
+                                                // Select all parameters
+                                                if (settingsManager) {
+                                                    const parameterList = [
+                                                        "COOLANT_TEMP", "CONTROL_MODULE_VOLTAGE", "ENGINE_LOAD", 
+                                                        "THROTTLE_POS", "INTAKE_TEMP", "TIMING_ADVANCE",
+                                                        "MAF", "SPEED", "RPM", "COMMANDED_EQUIV_RATIO",
+                                                        "FUEL_LEVEL", "INTAKE_PRESSURE", "SHORT_FUEL_TRIM_1",
+                                                        "LONG_FUEL_TRIM_1", "O2_B1S1", "FUEL_PRESSURE",
+                                                        "OIL_TEMP", "IGNITION_TIMING"
+                                                    ];
+                                                    
+                                                    parameterList.forEach(function(param) {
+                                                        settingsManager.save_obd_parameter_enabled(param, true);
+                                                    });
+                                                }
+                                            }
+                                        }
+                                    }
+                                    
+                                    // Deselect All button
+                                    Button {
+                                        id: deselectAllButton
+                                        text: "Deselect All"
+                                        implicitHeight: App.Spacing.overallSpacing * 2
+                                        
+                                        // Add click animation
+                                        scale: deselectAllMouseArea.pressed ? 0.95 : 1.0
+                                        opacity: deselectAllMouseArea.pressed ? 0.8 : 1.0
+                                        
+                                        Behavior on scale {
+                                            NumberAnimation {
+                                                duration: 100
+                                                easing.type: Easing.OutBack
+                                            }
+                                        }
+                                        
+                                        Behavior on opacity {
+                                            NumberAnimation { duration: 100 }
+                                        }
+                                        
+                                        background: Rectangle {
+                                            color: Qt.rgba(App.Style.accent.r, App.Style.accent.g, App.Style.accent.b, 0.5)
+                                            radius: 4
+                                        }
+                                        
+                                        contentItem: Text {
+                                            text: deselectAllButton.text
+                                            color: App.Style.primaryTextColor
+                                            font.pixelSize: App.Spacing.overallText
+                                            horizontalAlignment: Text.AlignHCenter
+                                            verticalAlignment: Text.AlignVCenter
+                                        }
+                                        
+                                        MouseArea {
+                                            id: deselectAllMouseArea
+                                            anchors.fill: parent
+                                            onClicked: {
+                                                // Deselect all parameters
+                                                if (settingsManager) {
+                                                    const parameterList = [
+                                                        "COOLANT_TEMP", "CONTROL_MODULE_VOLTAGE", "ENGINE_LOAD", 
+                                                        "THROTTLE_POS", "INTAKE_TEMP", "TIMING_ADVANCE",
+                                                        "MAF", "SPEED", "RPM", "COMMANDED_EQUIV_RATIO",
+                                                        "FUEL_LEVEL", "INTAKE_PRESSURE", "SHORT_FUEL_TRIM_1",
+                                                        "LONG_FUEL_TRIM_1", "O2_B1S1", "FUEL_PRESSURE",
+                                                        "OIL_TEMP", "IGNITION_TIMING"
+                                                    ];
+                                                    
+                                                    parameterList.forEach(function(param) {
+                                                        settingsManager.save_obd_parameter_enabled(param, false);
+                                                    });
+                                                }
                                             }
                                         }
                                     }
@@ -3506,7 +3426,7 @@ Item {
                                         id: enabledCount
                                         text: "0 of 0 enabled"
                                         color: App.Style.secondaryTextColor
-                                        font.pixelSize: App.Spacing.overallText * 0.9
+                                        font.pixelSize: App.Spacing.overallText
                                         
                                         // Count enabled parameters
                                         function updateEnabledCount() {
@@ -3529,10 +3449,6 @@ Item {
                                             });
                                             
                                             enabledCount.text = count + " of " + parameterList.length + " enabled";
-                                            
-                                            // Update select all button state
-                                            selectAllButton.allSelected = (count === parameterList.length);
-                                            selectAllButton.text = selectAllButton.allSelected ? "Deselect All" : "Select All";
                                         }
                                         
                                         Component.onCompleted: {
@@ -3544,7 +3460,7 @@ Item {
                                 // Debounce timer for counter updates
                                 Timer {
                                     id: updateCountTimer
-                                    interval: 250
+                                    interval: 10
                                     running: false
                                     repeat: false
                                     onTriggered: {
@@ -3559,26 +3475,16 @@ Item {
                                         updateCountTimer.restart();
                                     }
                                 }
-                                                               
-                                // IMPROVED PARAMETER LIST AREA
-                                ListView {
-                                    id: parameterListView
+                                                    
+                                // IMPROVED PARAMETER CHIPS AREA
+                                Flow {
+                                    id: parameterChipsFlow
                                     Layout.fillWidth: true
-                                    Layout.preferredHeight: Math.min(600, contentHeight)
-                                    clip: true
-                                    spacing: 8  // Increased spacing for better separation
-                                    flickableDirection: Flickable.VerticalFlick
+                                    spacing: 12
+                                    Layout.preferredHeight: Math.min(600, childrenRect.height)
                                     
-                                    // Add a nice scrollbar
-                                    ScrollBar.vertical: ScrollBar {
-                                        active: parameterListView.contentHeight > parameterListView.height
-                                        policy: ScrollBar.AsNeeded
-                                        width: 1
-                                        opacity: 0.2
-                                        interactive: true
-                                    }
-                                    
-                                    model: [
+                                    // Parameter chips model
+                                    property var parametersModel: [
                                         // Original parameters
                                         { name: "Vehicle Speed", command: "SPEED" },
                                         { name: "Engine RPM", command: "RPM" },
@@ -3600,109 +3506,139 @@ Item {
                                         { name: "Ignition Timing", command: "IGNITION_TIMING" }
                                     ]
                                     
-                                    delegate: Rectangle {
-                                        width: parameterListView.width
-                                        height: 60  // Increased height for better touch targets
-                                        color: index % 2 === 0 ? 
-                                            Qt.rgba(App.Style.backgroundColor.r, App.Style.backgroundColor.g, App.Style.backgroundColor.b, 0.3) : 
-                                            "transparent"
-                                        radius: 4
+                                    Repeater {
+                                        model: parameterChipsFlow.parametersModel
                                         
-                                        RowLayout {
-                                            anchors {
-                                                fill: parent
-                                                leftMargin: 8
-                                                rightMargin: 8
-                                            }
-                                            spacing: 10
+                                        delegate: Rectangle {
+                                            id: paramChip
+                                            width: Math.min(parameterChipsFlow.width * 0.3, 400)
+                                            height: App.Spacing.settingsButtonHeight*.8
+                                            radius: 12
                                             
-                                            // Use our custom checkbox for better touch interaction
-                                            SettingsCheckBox {
-                                                id: paramCheck
-                                                text: modelData.name
-                                                Layout.fillWidth: true
-                                                Layout.preferredWidth: parent.width * 0.7 // Give more space to the checkbox
-                                                
-                                                // Bind to parameter state
-                                                checked: settingsManager ? 
-                                                    settingsManager.get_obd_parameter_enabled(modelData.command, true) : true
-                                                
-                                                // Save parameter state when toggled
-                                                onToggled: {
+                                            // Bind the color directly to the parameter's enabled state
+                                            property bool isEnabled: settingsManager ? 
+                                                settingsManager.get_obd_parameter_enabled(modelData.command, true) : true
+                                            
+                                            // Track if this parameter is on the home screen
+                                            property bool isOnHomeScreen: {
+                                                if (!settingsManager) return false;
+                                                let homeParams = settingsManager.get_home_obd_parameters();
+                                                return homeParams.indexOf(modelData.command) !== -1;
+                                            }
+                                            
+                                            // Use a darker background for disabled chips to improve contrast
+                                            color: isEnabled ? 
+                                                Qt.rgba(App.Style.accent.r, App.Style.accent.g, App.Style.accent.b, 0.2) : 
+                                                Qt.rgba(App.Style.backgroundColor.r, App.Style.backgroundColor.g, App.Style.backgroundColor.b, 0.5)
+                                            
+                                            border.width: 1
+                                            border.color: isEnabled ?
+                                                App.Style.accent : 
+                                                Qt.rgba(App.Style.primaryTextColor.r, App.Style.primaryTextColor.g, App.Style.primaryTextColor.b, 0.3)
+                                            
+                                            // Add click animation
+                                            scale: chipMouseArea.pressed ? 0.97 : 1.0
+                                            opacity: chipMouseArea.pressed ? 0.9 : 1.0
+                                            
+                                            Behavior on scale {
+                                                NumberAnimation {
+                                                    duration: 100
+                                                    easing.type: Easing.OutQuad
+                                                }
+                                            }
+                                            
+                                            Behavior on opacity {
+                                                NumberAnimation { duration: 100 }
+                                            }
+                                            
+                                            // Update enabled state when settings change
+                                            Connections {
+                                                target: settingsManager
+                                                function onObdParametersChanged() {
                                                     if (settingsManager) {
-                                                        settingsManager.save_obd_parameter_enabled(modelData.command, checked);
-                                                        updateCountTimer.restart();
+                                                        paramChip.isEnabled = settingsManager.get_obd_parameter_enabled(modelData.command, true);
                                                     }
                                                 }
-                                            }
-                                            
-                                            Item {
-                                                // Spacer to push the home button more to the middle
-                                                Layout.preferredWidth: parent.width * 0.1
-                                            }
-                                            
-                                            // Use our custom home button for better touch interaction
-                                            HomeScreenButton {
-                                                id: homeButton
-                                                visible: paramCheck.checked
-                                                Layout.preferredWidth: parent.width * 0.2
                                                 
-                                                // Use a property with a proper change notification
-                                                property bool isOnHomeScreen: false
-                                                
-                                                // Update isActive from isOnHomeScreen
-                                                isActive: isOnHomeScreen
-                                                
-                                                // Function to update the isOnHomeScreen state
-                                                function updateHomeStatus() {
-                                                    if (!settingsManager) return false;
-                                                    let homeParams = settingsManager.get_home_obd_parameters();
-                                                    isOnHomeScreen = homeParams.indexOf(modelData.command) !== -1;
-                                                }
-                                                
-                                                // Initialize on component completion
-                                                Component.onCompleted: {
-                                                    updateHomeStatus();
-                                                }
-                                                
-                                                // Update when home parameters change
-                                                Connections {
-                                                    target: settingsManager
-                                                    function onHomeOBDParametersChanged() {
+                                                function onHomeOBDParametersChanged() {
+                                                    if (settingsManager) {
+                                                        let homeParams = settingsManager.get_home_obd_parameters();
+                                                        paramChip.isOnHomeScreen = homeParams.indexOf(modelData.command) !== -1;
                                                         homeButton.updateHomeStatus();
                                                     }
                                                 }
-                                                Connections {
-                                                    target: settingsManager
-                                                    function onHomeOBDParametersChanged() {
-                                                        updateHomeDisplay();
-                                                    }
+                                            }
+                                            
+                                            RowLayout {
+                                                anchors {
+                                                    fill: parent
+                                                    margins: 12
+                                                }
+                                                spacing: 8
+
+                                                // Parameter name - always make the text visible regardless of enabled state
+                                                Text {
+                                                    text: modelData.name
+                                                    color: App.Style.primaryTextColor
+                                                    font.pixelSize: App.Spacing.overallText
+                                                    Layout.fillWidth: true
+                                                    elide: Text.ElideRight
                                                 }
                                                 
-                                                onClicked: {
-                                                    if (settingsManager) {
-                                                        let homeParams = settingsManager.get_home_obd_parameters();
-                                                        
-                                                        if (isActive) {
-                                                            // Remove from home screen
-                                                            let index = homeParams.indexOf(modelData.command);
-                                                            if (index !== -1) {
-                                                                homeParams.splice(index, 1);
-                                                                settingsManager.save_home_obd_parameters(homeParams);
-                                                                updateHomeDisplay(); // Use the centralized update function
-                                                            }
-                                                        } else {
-                                                            // Add to home screen
-                                                            if (homeParams.length < 4) {
-                                                                homeParams.push(modelData.command);
-                                                                settingsManager.save_home_obd_parameters(homeParams);
-                                                                updateHomeDisplay(); // Use the centralized update function
+                                                // Add home button
+                                                HomeScreenButton {
+                                                    id: homeButton
+                                                    isActive: paramChip.isOnHomeScreen
+                                                    
+                                                    function updateHomeStatus() {
+                                                        if (settingsManager) {
+                                                            let homeParams = settingsManager.get_home_obd_parameters();
+                                                            isActive = homeParams.indexOf(modelData.command) !== -1;
+                                                        }
+                                                    }
+                                                    
+                                                    Component.onCompleted: {
+                                                        updateHomeStatus();
+                                                    }
+                                                    
+                                                    onClicked: {
+                                                        if (settingsManager) {
+                                                            let homeParams = settingsManager.get_home_obd_parameters();
+                                                            
+                                                            if (isActive) {
+                                                                // Remove from home screen
+                                                                let index = homeParams.indexOf(modelData.command);
+                                                                if (index !== -1) {
+                                                                    homeParams.splice(index, 1);
+                                                                    settingsManager.save_home_obd_parameters(homeParams);
+                                                                }
                                                             } else {
-                                                                // Show dialog asking which parameter to replace
-                                                                replaceDialog.paramToAdd = modelData.command;
-                                                                replaceDialog.open();
+                                                                // Add to home screen if space available
+                                                                if (homeParams.length < 4) {
+                                                                    homeParams.push(modelData.command);
+                                                                    settingsManager.save_home_obd_parameters(homeParams);
+                                                                } else {
+                                                                    // Show replacement dialog if full
+                                                                    replaceDialog.paramToAdd = modelData.command;
+                                                                    replaceDialog.open();
+                                                                }
                                                             }
                                                         }
+                                                    }
+                                                }
+                                            }
+                                            
+                                            // Simple click area with animation
+                                            MouseArea {
+                                                id: chipMouseArea
+                                                anchors.fill: parent
+                                                anchors.rightMargin: 64 // Leave space for home button
+                                                onClicked: {
+                                                    if (settingsManager) {
+                                                        // Toggle the enabled state
+                                                        let newState = !paramChip.isEnabled;
+                                                        settingsManager.save_obd_parameter_enabled(modelData.command, newState);
+                                                        updateCountTimer.restart();
                                                     }
                                                 }
                                             }
@@ -3723,7 +3659,7 @@ Item {
                             // Bottom spacer
                             Item { 
                                 Layout.fillHeight: true
-                                Layout.minimumHeight: 20
+                                Layout.minimumHeight: App.Spacing.bottomBarHeight
                             }
 
                             function updateHomeDisplay() {

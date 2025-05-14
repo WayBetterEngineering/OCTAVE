@@ -1237,7 +1237,7 @@ Rectangle {
                             }
                         }
                         
-                        // ROW 2: Shuffle button
+                        // Shuffle button
                         Control {
                             id: shuffleButtonVertical
                             property bool isShuffleEnabled: mediaManager ? mediaManager.is_shuffled() : false

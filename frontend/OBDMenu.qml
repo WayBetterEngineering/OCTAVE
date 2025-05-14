@@ -1,7 +1,6 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
-import QtCharts 2.15
 import "." as App
 
 Item {
@@ -9,191 +8,177 @@ Item {
     required property StackView stackView
     required property ApplicationWindow mainWindow
 
+    // Define background and accent colors based on screenshot
+    property color backgroundColor: App.Style.obdBoxBackground 
+    property color accentColor: App.Style.obdBarColor
+    property color textColor: App.Style.primaryTextColor
+    
+    // OBD parameters definition
+    property var allParameters: [
+        { id: "SPEED", title: "Speed", unit: "MPH", min: 0, max: 160 },
+        { id: "RPM", title: "Engine RPM", unit: "RPM", min: 0, max: 8000 },
+        { id: "COOLANT_TEMP", title: "Temperature", unit: "°C", min: 0, max: 120 },
+        { id: "OIL_TEMP", title: "Oil Temp", unit: "°C", min: 0, max: 150 },
+        { id: "COMMANDED_EQUIV_RATIO", title: "Air-Fuel Ratio", unit: ":1", min: 10, max: 18 },
+        { id: "ENGINE_LOAD", title: "Engine Load", unit: "%", min: 0, max: 100 },
+        { id: "THROTTLE_POS", title: "Throttle", unit: "%", min: 0, max: 100 },
+        { id: "FUEL_LEVEL", title: "Fuel Level", unit: "%", min: 0, max: 100 },
+        { id: "SHORT_FUEL_TRIM_1", title: "Short Fuel Trim", unit: "%", min: -25, max: 25 },
+        { id: "LONG_FUEL_TRIM_1", title: "Long Fuel Trim", unit: "%", min: -25, max: 25 },
+        { id: "INTAKE_TEMP", title: "Intake Temp", unit: "°C", min: 0, max: 80 },
+        { id: "INTAKE_PRESSURE", title: "Intake Pressure", unit: "kPa", min: 0, max: 255 },
+        { id: "MAF", title: "Mass Air Flow", unit: "g/s", min: 0, max: 100 },
+        { id: "TIMING_ADVANCE", title: "Timing Advance", unit: "°", min: -35, max: 35 },
+        { id: "CONTROL_MODULE_VOLTAGE", title: "System Voltage", unit: "V", min: 10, max: 15 },
+        { id: "O2_B1S1", title: "O2 Sensor", unit: "V", min: 0, max: 1.0 },
+        { id: "FUEL_PRESSURE", title: "Fuel Pressure", unit: "kPa", min: 0, max: 765 },
+        { id: "IGNITION_TIMING", title: "Timing", unit: "°", min: -10, max: 60 }
+    ]
+    
+    // OBD values storage
+    property var paramValues: ({})
+    
     // OBD Data Connections
     Connections {
         target: obdManager
 
-        function onCoolantTempChanged(value) {
-            coolantTempDisplay.value = value
-        }
-
-        function onVoltageChanged(value) {
-            voltageDisplay.value = value
-        }
-
-        function onEngineLoadChanged(value) {
-            loadDisplay.value = value
-        }
-
-        function onThrottlePositionChanged(value) {
-            throttleDisplay.value = value
-        }
-
-        function onIntakeAirTempChanged(value) {
-            intakeDisplay.value = value
-        }
-
-        function onTimingAdvanceChanged(value) {
-            timingDisplay.value = value
-        }
-
-        function onMassAirFlowChanged(value) {
-            mafDisplay.value = value
-        }
-
-        function onSpeedMPHChanged(value) {
-            speedDisplay.value = value
-        }
-        
-        function onRpmChanged(value) {
-            rpmDisplay.value = value
-        }
-        
-        function onAirFuelRatioChanged(value) {
-            afrDisplay.value = value
-        }
-
-        function onIntakeManifoldPressureChanged(value) {
-            mapDisplay.value = value
-        }
-
-        function onShortTermFuelTrimChanged(value) {
-            stftDisplay.value = value
-        }
-
-        function onLongTermFuelTrimChanged(value) {
-            ltftDisplay.value = value
-        }
-
-        function onOxygenSensorVoltageChanged(value) {
-            o2SensorDisplay.value = value
-        }
-
-        function onFuelPressureChanged(value) {
-            fuelPressureDisplay.value = value
-        }
-
-        function onEngineOilTempChanged(value) {
-            oilTempDisplay.value = value
-        }
-
-        function onIgnitionTimingChanged(value) {
-            ignitionTimingDisplay.value = value
-        }
-    }
-
-
-    // Function to get all visible parameters
-    function getVisibleParameters() {
-        const allParams = [
-            speedDisplay, rpmDisplay, coolantTempDisplay, oilTempDisplay,
-            afrDisplay, loadDisplay, throttleDisplay, fuelLevelDisplay,
-            stftDisplay, ltftDisplay, intakeDisplay, mapDisplay, 
-            mafDisplay, timingDisplay, voltageDisplay, o2SensorDisplay, 
-            fuelPressureDisplay, ignitionTimingDisplay
-        ];
-        
-        return allParams.filter(param => 
-            param.visible && settingsManager ? 
-            settingsManager.get_obd_parameter_enabled(param.parameter, true) : 
-            true
-        );
-    }
-
-    // Function to update the layout
-    function updateLayout() {
-        const visibleParams = getVisibleParameters();
-        const totalParams = visibleParams.length;
-        
-        // Calculate optimum layout (aiming for a more square grid)
-        let columns = Math.max(2, Math.min(4, Math.ceil(Math.sqrt(totalParams))));
-        
-        // If we have many parameters, force 4 columns
-        if (totalParams >= 12) columns = 4;
-        
-        // Update the gridLayout
-        flowLayout.columns = columns;
-        
-        // Calculate available height considering the bottom bar
-        const bottomBarHeight = 70; // Increased to account for bottom bar and any padding
-        
-        // Update each item's size based on column count and available height
-        const itemWidth = (parent.width - (flowLayout.columnSpacing * (columns - 1)) - flowLayout.anchors.leftMargin - flowLayout.anchors.rightMargin) / columns;
-        
-        // Determine appropriate height based on number of rows
-        const rows = Math.ceil(totalParams / columns);
-        const itemHeight = (parent.height - bottomBarHeight - (flowLayout.rowSpacing * (rows - 1)) - flowLayout.anchors.topMargin - flowLayout.anchors.bottomMargin) / rows;
-        
-        // Apply sizes to all parameters
-        visibleParams.forEach(param => {
-            param.width = itemWidth;
-            param.height = itemHeight;
-        });
-        
-        // Make sure all params are actually in the layout
-        visibleParams.forEach(param => param.parent = flowLayout);
-        
-        console.log("Layout updated: " + columns + " columns, " + rows + " rows, " + totalParams + " parameters");
+        function onCoolantTempChanged(value) { paramValues["COOLANT_TEMP"] = value; updateParamValue("COOLANT_TEMP"); }
+        function onVoltageChanged(value) { paramValues["CONTROL_MODULE_VOLTAGE"] = value; updateParamValue("CONTROL_MODULE_VOLTAGE"); }
+        function onEngineLoadChanged(value) { paramValues["ENGINE_LOAD"] = value; updateParamValue("ENGINE_LOAD"); }
+        function onThrottlePositionChanged(value) { paramValues["THROTTLE_POS"] = value; updateParamValue("THROTTLE_POS"); }
+        function onIntakeAirTempChanged(value) { paramValues["INTAKE_TEMP"] = value; updateParamValue("INTAKE_TEMP"); }
+        function onTimingAdvanceChanged(value) { paramValues["TIMING_ADVANCE"] = value; updateParamValue("TIMING_ADVANCE"); }
+        function onMassAirFlowChanged(value) { paramValues["MAF"] = value; updateParamValue("MAF"); }
+        function onSpeedMPHChanged(value) { paramValues["SPEED"] = value; updateParamValue("SPEED"); }
+        function onRpmChanged(value) { paramValues["RPM"] = value; updateParamValue("RPM"); }
+        function onAirFuelRatioChanged(value) { paramValues["COMMANDED_EQUIV_RATIO"] = value; updateParamValue("COMMANDED_EQUIV_RATIO"); }
+        function onIntakeManifoldPressureChanged(value) { paramValues["INTAKE_PRESSURE"] = value; updateParamValue("INTAKE_PRESSURE"); }
+        function onShortTermFuelTrimChanged(value) { paramValues["SHORT_FUEL_TRIM_1"] = value; updateParamValue("SHORT_FUEL_TRIM_1"); }
+        function onLongTermFuelTrimChanged(value) { paramValues["LONG_FUEL_TRIM_1"] = value; updateParamValue("LONG_FUEL_TRIM_1"); }
+        function onOxygenSensorVoltageChanged(value) { paramValues["O2_B1S1"] = value; updateParamValue("O2_B1S1"); }
+        function onFuelPressureChanged(value) { paramValues["FUEL_PRESSURE"] = value; updateParamValue("FUEL_PRESSURE"); }
+        function onEngineOilTempChanged(value) { paramValues["OIL_TEMP"] = value; updateParamValue("OIL_TEMP"); }
+        function onIgnitionTimingChanged(value) { paramValues["IGNITION_TIMING"] = value; updateParamValue("IGNITION_TIMING"); }
     }
     
-    // Enhanced Parameter Display with Slider
-    component ParameterDisplay: Rectangle {
-        property string title: ""
-        property real value: 0
-        property string unit: ""
-        property real minValue: 0
-        property real maxValue: 100
-        property string parameter: ""
-        
-        // Use the themed box background color instead of contentColor
-        color: App.Style.obdBoxBackground
-        radius: 8
-        visible: settingsManager ? settingsManager.get_obd_parameter_enabled(parameter, true) : true
-        
-        // Call updateLayout when visibility changes
-        onVisibleChanged: {
-            updateTimer.restart();
+    // Function to update values without triggering crashes
+    function updateParamValue(paramId) {
+        // We don't need to do anything else as bindings will automatically update
+        // This is just to ensure we have a function to call from the connections
+    }
+    
+    // Just update column count when parameters change
+    function updateLayout() {
+        // Count visible parameters
+        let visibleCount = 0;
+        for (let i = 0; i < allParameters.length; i++) {
+            const param = allParameters[i];
+            if (settingsManager && settingsManager.get_obd_parameter_enabled(param.id, true)) {
+                visibleCount++;
+            }
         }
-
-        ColumnLayout {
-            anchors.fill: parent
-            anchors.margins: 10
-            spacing: 5
-
-            Text {
-                text: title
-                color: App.Style.primaryTextColor
-                font.pixelSize: 14
-                Layout.alignment: Qt.AlignHCenter
+        
+        // Determine column count based on visible parameters
+        if (visibleCount <= 4) {
+            parametersGrid.columns = 2;
+        } else if (visibleCount <= 9) {
+            parametersGrid.columns = 3;
+        } else {
+            parametersGrid.columns = 4;
+        }
+    }
+    
+    Rectangle {
+        anchors.fill: parent
+        color: backgroundColor
+        
+        GridLayout {
+            id: parametersGrid
+            anchors {
+                fill: parent
+                margins: 10
+                bottomMargin: 70 // Space for bottom controls
             }
-
-            Text {
-                text: value.toFixed(1) + " " + unit
-                color: App.Style.primaryTextColor
-                font.pixelSize: 24
-                font.bold: true
-                Layout.alignment: Qt.AlignHCenter
-            }
-
-            Rectangle {
-                Layout.fillWidth: true
-                height: 12
-                color: App.Style.backgroundColor
-                radius: 6
-
+            columns: 3
+            rowSpacing: 10
+            columnSpacing: 10
+            
+            // Use Repeater to create parameter cards
+            Repeater {
+                model: allParameters
+                
                 Rectangle {
-                    width: Math.max(6, parent.width * Math.min(1, (value - minValue) / (maxValue - minValue)))
-                    height: parent.height
-                    // Use the themed bar color instead of accent
-                    color: App.Style.obdBarColor
+                    id: card
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    visible: settingsManager ? settingsManager.get_obd_parameter_enabled(modelData.id, true) : true
+                    
+                    // Update layout when visibility changes
+                    onVisibleChanged: {
+                        if (updateTimer.running) {
+                            updateTimer.restart();
+                        } else {
+                            updateTimer.start();
+                        }
+                    }
+                    
+                    // Only take up space when visible
+                    Layout.preferredWidth: visible ? implicitWidth : 0
+                    Layout.preferredHeight: visible ? implicitHeight : 0
+                    
+                    color: Qt.darker(backgroundColor, 0.9)
                     radius: 6
-                    Behavior on width { NumberAnimation { duration: 200 } }
+                    
+                    ColumnLayout {
+                        anchors.fill: parent
+                        anchors.margins: 8
+                        spacing: 4
+                        
+                        Text {
+                            text: modelData.title
+                            color: accentColor
+                            font.pixelSize: App.Spacing.overallText
+                            Layout.alignment: Qt.AlignHCenter
+                        }
+                        
+                        Text {
+                            text: ((paramValues[modelData.id] || 0.0).toFixed(1) + " " + modelData.unit)
+                            color: textColor
+                            font.pixelSize: App.Spacing.overallText
+                            font.bold: true
+                            Layout.alignment: Qt.AlignHCenter
+                        }
+                        
+                        Rectangle {
+                            Layout.fillWidth: true
+                            height: App.Spacing.overallSliderHeight * .5
+                            color: Qt.darker(backgroundColor, 1.1)
+                            radius: 3
+                            Layout.topMargin: 4
+                            
+                            Rectangle {
+                                id: progressBar
+                                height: parent.height
+                                radius: 3
+                                color: App.Style.obdBarColor
+                                width: {
+                                    const value = paramValues[modelData.id] || 0;
+                                    return Math.max(6, parent.width * Math.min(1, 
+                                        (value - modelData.min) / (modelData.max - modelData.min)));
+                                }
+                                
+                                Behavior on width {
+                                    NumberAnimation { duration: 10 }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
     }
-
-    // Timer to update layout when needed
+    
+    // Use a timer to delay layout updates to prevent rapid successive updates
     Timer {
         id: updateTimer
         interval: 100
@@ -201,230 +186,24 @@ Item {
         onTriggered: updateLayout()
     }
     
-    // Connections to settings manager to detect parameter toggling
+    // Listen for settings changes
     Connections {
         target: settingsManager
         function onObdParametersChanged() {
+            // Use timer to debounce multiple rapid changes
             updateTimer.restart();
         }
     }
-
-    Rectangle {
-        anchors.fill: parent
-        color: App.Style.backgroundColor
-
-        // Use GridLayout for more dynamic arrangement
-        GridLayout {
-            id: flowLayout
-            anchors {
-                fill: parent
-                topMargin: -25 // Explicitly set to zero to remove top gap
-                leftMargin: 10
-                rightMargin: 10
-                bottomMargin: 70 // Account for bottom bar height plus some padding
-            }
-            rowSpacing: 10
-            columnSpacing: 10
-            columns: 4 // Default number of columns
-            
-            // All parameters are created but will be managed by updateLayout()
-            ParameterDisplay {
-                id: speedDisplay
-                title: "Speed"
-                unit: "MPH"
-                minValue: 0
-                maxValue: 160
-                parameter: "SPEED"
-            }
-
-            ParameterDisplay {
-                id: rpmDisplay
-                title: "Engine RPM"
-                unit: "RPM"
-                minValue: 0
-                maxValue: 8000
-                parameter: "RPM"
-            }
-
-            ParameterDisplay {
-                id: coolantTempDisplay
-                title: "Engine Temperature"
-                unit: "°C"
-                minValue: 0
-                maxValue: 120
-                parameter: "COOLANT_TEMP"
-            }
-
-            ParameterDisplay {
-                id: oilTempDisplay
-                title: "Oil Temperature"
-                unit: "°C"
-                minValue: 0
-                maxValue: 150
-                parameter: "OIL_TEMP"
-            }
-
-            ParameterDisplay {
-                id: afrDisplay
-                title: "Air-Fuel Ratio"
-                unit: ":1"
-                minValue: 10
-                maxValue: 18
-                parameter: "COMMANDED_EQUIV_RATIO"
-            }
-
-            ParameterDisplay {
-                id: loadDisplay
-                title: "Engine Load"
-                unit: "%"
-                minValue: 0
-                maxValue: 100
-                parameter: "ENGINE_LOAD"
-            }
-
-            ParameterDisplay {
-                id: throttleDisplay
-                title: "Throttle"
-                unit: "%"
-                minValue: 0
-                maxValue: 100
-                parameter: "THROTTLE_POS"
-            }
-
-            ParameterDisplay {
-                id: fuelLevelDisplay
-                title: "Fuel Level"
-                unit: "%"
-                minValue: 0
-                maxValue: 100
-                parameter: "FUEL_LEVEL"
-            }
-
-            ParameterDisplay {
-                id: stftDisplay
-                title: "Short Fuel Trim"
-                unit: "%"
-                minValue: -25
-                maxValue: 25
-                parameter: "SHORT_FUEL_TRIM_1"
-            }
-
-            ParameterDisplay {
-                id: ltftDisplay
-                title: "Long Fuel Trim"
-                unit: "%"
-                minValue: -25
-                maxValue: 25
-                parameter: "LONG_FUEL_TRIM_1"
-            }
-
-            ParameterDisplay {
-                id: intakeDisplay
-                title: "Intake Temp"
-                unit: "°C"
-                minValue: 0
-                maxValue: 80
-                parameter: "INTAKE_TEMP"
-            }
-
-            ParameterDisplay {
-                id: mapDisplay
-                title: "Intake Pressure"
-                unit: "kPa"
-                minValue: 0
-                maxValue: 255
-                parameter: "INTAKE_PRESSURE"
-            }
-
-            ParameterDisplay {
-                id: mafDisplay
-                title: "Mass Air Flow"
-                unit: "g/s"
-                minValue: 0
-                maxValue: 100
-                parameter: "MAF"
-            }
-
-            ParameterDisplay {
-                id: timingDisplay
-                title: "Timing Advance"
-                unit: "°"
-                minValue: -35
-                maxValue: 35
-                parameter: "TIMING_ADVANCE"
-            }
-
-            ParameterDisplay {
-                id: voltageDisplay
-                title: "System Voltage"
-                unit: "V"
-                minValue: 10
-                maxValue: 15
-                parameter: "CONTROL_MODULE_VOLTAGE"
-            }
-
-            ParameterDisplay {
-                id: o2SensorDisplay
-                title: "O2 Sensor"
-                unit: "V"
-                minValue: 0
-                maxValue: 1.0
-                parameter: "O2_B1S1"
-            }
-
-            ParameterDisplay {
-                id: fuelPressureDisplay
-                title: "Fuel Pressure"
-                unit: "kPa"
-                minValue: 0
-                maxValue: 765
-                parameter: "FUEL_PRESSURE"
-            }
-
-            ParameterDisplay {
-                id: ignitionTimingDisplay
-                title: "Ignition Timing"
-                unit: "°"
-                minValue: -10
-                maxValue: 60
-                parameter: "IGNITION_TIMING"
-            }
-        }
-    }
     
-    // Call the layout update after component completes
-    Component.onCompleted: {
-        updateTimer.start();
-    }
-    
-    // Also update when the window size changes
+    // Listen for window size changes
     Connections {
         target: parent
         function onWidthChanged() { updateTimer.restart(); }
         function onHeightChanged() { updateTimer.restart(); }
     }
-
-    // Add this connection to explicitly listen for parameter changes
-    Connections {
-        target: settingsManager
-        function onObdParametersChanged() {
-            // Force update of all parameter visibility states
-            const allParams = [
-                speedDisplay, rpmDisplay, coolantTempDisplay, oilTempDisplay,
-                afrDisplay, loadDisplay, throttleDisplay, fuelLevelDisplay,
-                stftDisplay, ltftDisplay, intakeDisplay, mapDisplay, 
-                mafDisplay, timingDisplay, voltageDisplay, o2SensorDisplay, 
-                fuelPressureDisplay, ignitionTimingDisplay
-            ];
-            
-            allParams.forEach(param => {
-                // Update visibility based on current setting
-                param.visible = settingsManager.get_obd_parameter_enabled(param.parameter, true);
-            });
-
-            // Trigger layout update with a bit of delay to allow visibility changes to apply
-            updateTimer.interval = 200;
-            updateTimer.restart();
-        }
+    
+    // Initialize layout
+    Component.onCompleted: {
+        updateTimer.start();
     }
 }

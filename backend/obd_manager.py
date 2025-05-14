@@ -171,8 +171,7 @@ class OBDManager(QObject):
             self.connectionProgressChanged.emit(0)
         
         self._is_connecting = False
-        
-        
+             
     def _start_connection_monitor(self):
         """Start a thread to monitor connection status"""
         if self._monitor_thread and self._monitor_thread.is_alive():
@@ -185,7 +184,7 @@ class OBDManager(QObject):
         self._monitor_thread.start()
     
     def _monitor_connection(self):
-        
+         
         """Thread function to monitor connection status"""
         check_interval = 2.0  # seconds
         last_status = self._connection.status() if self._connection else None
@@ -219,6 +218,7 @@ class OBDManager(QObject):
                 
             time.sleep(check_interval)
     def _setup_watchers(self):
+        
         """Set up watchers based on settings"""
         if not self._connection:
             return
@@ -258,7 +258,6 @@ class OBDManager(QObject):
                 self._connection.watch(command, callback=callback)
             else:
                 print(f"Not watching OBD parameter: {param}")
-
     # Original Callback functions
     def _update_coolant(self, r):
         if not r.is_null():
