@@ -5,6 +5,7 @@ from mutagen.mp3 import MP3
 from mutagen.id3 import ID3, TIT2, TPE1, TALB
 import os
 import random
+import re
 
 # Check if audio processing libraries are available
 try:
@@ -29,6 +30,9 @@ class MediaManager(QObject):
     durationFormatChanged = Signal(str)
     volumeChanged = Signal(float)
     shuffleStateChanged = Signal(bool)
+    totalDurationChanged = Signal(str)  # Formatted duration string
+    albumCountChanged = Signal(int)     # Number of unique albums
+    artistCountChanged = Signal(int)    # Number of unique artists
     
     
     def __init__(self):
@@ -69,6 +73,15 @@ class MediaManager(QObject):
         self._max_cache_files = 500  # Maximum number of cached files
         self._metadata_cache_max = 1000  # Maximum metadata cache entries
         self._access_count = {}  # Track album art access for LRU caching
+        
+        # Statistics cache
+        self._stats_cache = {
+            "total_duration_ms": 0,
+            "total_duration_formatted": "0:00:00",
+            "album_count": 0,
+            "artist_count": 0,
+            "is_valid": False
+        }
         
         # Connect signals
         self._player.durationChanged.connect(self.durationChanged.emit)
@@ -278,7 +291,12 @@ class MediaManager(QObject):
                 print(f"Cache managed. New size: {len(self._album_art_cache)}")
         except Exception as e:
             print(f"Cache management error: {e}")
-            
+
+    @Slot()
+    def invalidate_stats_cache(self):
+        """Mark the statistics cache as invalid to force recalculation"""
+        self._stats_cache["is_valid"] = False  
+                
     @Slot()
     def _clear_temp_files(self):
         """Improved temp file management with error handling"""
@@ -308,8 +326,8 @@ class MediaManager(QObject):
         random.shuffle(shuffled)
         return shuffled
                 
-    @Slot()
-    def get_media_files(self):
+    @Slot(result=list)
+    def get_media_files(self, emit_signal=True):
         """Get list of available MP3 files"""
         mp3_files = []
         try:
@@ -318,10 +336,15 @@ class MediaManager(QObject):
                     if file.lower().endswith('.mp3'):
                         mp3_files.append(file)
                         
-                self.mediaListChanged.emit(mp3_files)
+                # Only emit signal if requested
+                if emit_signal:
+                    self.mediaListChanged.emit(mp3_files)
+                
+                # Debug output
+                print(f"Found {len(mp3_files)} MP3 files in {self.media_dir}")
         except Exception as e:
             print(f"Error getting media files: {e}")
-            
+                
         return mp3_files
     
     @Slot(str, result=str)
@@ -375,21 +398,41 @@ class MediaManager(QObject):
             file_path = os.path.join(self.media_dir, filename)
             audio = ID3(file_path)
             
+            found_apic = False
+            apic_index = 0
             for tag in audio.values():
                 if tag.FrameID == 'APIC':
-                    # Create a unique name for this album art
-                    temp_path = os.path.join(self.temp_dir, f'cover_{hash(album_id)}.jpg')
+                    found_apic = True
+                    # Determine file extension from MIME type
+                    mime = tag.mime.lower()
+                    if mime == 'image/jpeg' or mime == 'image/jpg':
+                        ext = 'jpg'
+                    elif mime == 'image/png':
+                        ext = 'png'
+                    elif mime == 'image/gif':
+                        ext = 'gif'
+                    else:
+                        ext = 'img'  # fallback
+
+                    # Create a unique name for this album art (support multiple APIC frames)
+                    temp_path = os.path.join(self.temp_dir, f'cover_{hash((album_id, apic_index))}.{ext}')
                     
                     # Write the image data
                     with open(temp_path, 'wb') as img_file:
                         img_file.write(tag.data)
                     
-                    # Convert to URL and cache
-                    url = QUrl.fromLocalFile(temp_path).toString()
-                    self._album_art_cache[album_id] = url
-                    return url
+                    # Convert to URL and cache (cache only the first one for this album_id)
+                    if album_id not in self._album_art_cache:
+                        url = QUrl.fromLocalFile(temp_path).toString()
+                        self._album_art_cache[album_id] = url
+                        # Optionally, you could return here if you only want the first image
+                        return url
+                    apic_index += 1
 
-            return ""
+            if not found_apic:
+                return ""
+            # If multiple APICs, only the first is returned/cached for now
+            return self._album_art_cache.get(album_id, "")
         except Exception as e:
             print(f"Error getting album art: {e}")
             return ""
@@ -406,8 +449,8 @@ class MediaManager(QObject):
                 import re
                 self._current_playlist = sorted(files, key=lambda x: re.sub(r'[^\w\s]|_', '', x.lower()))
                 self._current_index = 0
-                # Return the first file but don't play it
-                return files[0]
+                # Return the first file from the sorted playlist but don't play it
+                return self._current_playlist[0]
                 
         # Return current file if index is valid
         if 0 <= self._current_index < len(self._current_playlist):
@@ -697,6 +740,7 @@ class MediaManager(QObject):
             self._metadata_cache = {}
             self._album_art_cache = {}
             self._access_count = {}
+            self.invalidate_stats_cache()  # Add this line
             
             # Refresh media files
             self.get_media_files()
@@ -759,3 +803,122 @@ class MediaManager(QObject):
     def get_default_media_dir(self):
         """Return the default media directory path"""
         return self.default_media_dir
+        
+    def _calculate_all_stats(self):
+        """Calculate all statistics at once and cache the results"""
+        if self._stats_cache["is_valid"]:
+            return
+            
+        try:
+            files = self.get_media_files()
+            
+            # Initialize calculation variables
+            total_ms = 0
+            albums = set()
+            artists = set()
+            
+            # Process all files in a single pass
+            for filename in files:
+                if filename not in self._metadata_cache:
+                    self._cache_metadata(filename)
+                    
+                # Duration
+                duration_seconds = self._metadata_cache[filename]["duration"]
+                total_ms += duration_seconds * 1000
+                
+                # Album
+                album = self._metadata_cache[filename]["album"]
+                if album and album != "Unknown Album":
+                    albums.add(album)
+                    
+                # Artist
+                artist = self._metadata_cache[filename]["artist"]
+                if artist and artist != "Unknown Artist":
+                    artists.add(artist)
+            
+            # Update cache
+            self._stats_cache["total_duration_ms"] = total_ms
+            self._stats_cache["total_duration_formatted"] = self._format_duration(total_ms)
+            self._stats_cache["album_count"] = len(albums)
+            self._stats_cache["artist_count"] = len(artists)
+            self._stats_cache["is_valid"] = True
+            
+            # Emit signals with new values
+            self.totalDurationChanged.emit(self._stats_cache["total_duration_formatted"])
+            self.albumCountChanged.emit(self._stats_cache["album_count"])
+            self.artistCountChanged.emit(self._stats_cache["artist_count"])
+            
+            print(f"Statistics calculated: {len(files)} songs, {len(albums)} albums, {len(artists)} artists, {self._stats_cache['total_duration_formatted']} total duration")
+        
+        except Exception as e:
+            print(f"Error calculating statistics: {e}")
+            # Set default values on error
+            self._stats_cache["total_duration_ms"] = 0
+            self._stats_cache["total_duration_formatted"] = "0:00:00"
+            self._stats_cache["album_count"] = 0
+            self._stats_cache["artist_count"] = 0
+
+    def _format_duration(self, ms):
+        """Format milliseconds to hours:minutes:seconds"""
+        try:
+            seconds = int(ms / 1000)
+            minutes = int(seconds / 60)
+            hours = int(minutes / 60)
+            minutes = minutes % 60
+            seconds = seconds % 60
+            return f"{hours}:{minutes:02d}:{seconds:02d}"
+        except Exception as e:
+            print(f"Error formatting duration: {e}")
+            return "0:00:00"
+
+    @Slot(result=str)
+    def get_total_duration(self):
+        """Get the total duration of all media files as formatted string"""
+        if not self._stats_cache["is_valid"]:
+            self._calculate_all_stats()
+        return self._stats_cache["total_duration_formatted"]
+
+    @Slot(result=int)
+    def get_album_count(self):
+        """Get the count of unique albums"""
+        if not self._stats_cache["is_valid"]:
+            self._calculate_all_stats()
+        return self._stats_cache["album_count"]
+
+    @Slot(result=int)
+    def get_artist_count(self):
+        """Get the count of unique artists"""
+        if not self._stats_cache["is_valid"]:
+            self._calculate_all_stats()
+        return self._stats_cache["artist_count"]
+
+    @Slot(str, bool, result=list)
+    def sort_media_files(self, sort_column, ascending=True):
+        """Sort media files based on criteria"""
+        try:
+            # Use cached files instead of calling get_media_files() again
+            # This is the key change to prevent the infinite recursion
+            files = self._current_playlist if self._current_playlist else self.get_media_files(emit_signal=False)
+            
+            if sort_column == "title":
+                sorted_files = sorted(files, 
+                                key=lambda x: re.sub(r'[^\w\s]|_', '', 
+                                                    x.replace('.mp3', '').lower().strip()), 
+                                reverse=not ascending)
+            elif sort_column == "album":
+                sorted_files = sorted(files, 
+                                key=lambda x: re.sub(r'[^\w\s]|_', '', 
+                                                    self.get_album(x).lower().strip()), 
+                                reverse=not ascending)
+            elif sort_column == "artist":
+                sorted_files = sorted(files, 
+                                key=lambda x: re.sub(r'[^\w\s]|_', '', 
+                                                    self.get_band(x).lower().strip()), 
+                                reverse=not ascending)
+            else:
+                sorted_files = files
+                
+            return sorted_files
+        except Exception as e:
+            print(f"Error sorting media files: {e}")
+            return []  # Return empty list on error instead of calling get_media_files again

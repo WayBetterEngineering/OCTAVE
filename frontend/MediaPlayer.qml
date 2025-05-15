@@ -14,8 +14,15 @@ Item {
     property string lastPlayedSong: ""
     property real listViewPosition: 0
     property bool isPaused: false
-    property int currentFileIndex: 0
-    property bool isCalculating: false
+    
+    // Add property for current library name
+    property string currentLibraryName: {
+        if (settingsManager && settingsManager.mediaFolder) {
+            const parts = settingsManager.mediaFolder.split(/[/\\]/)
+            return parts[parts.length - 1] || "Music Library"
+        }
+        return "Music Library"
+    }
 
     // Sorting properties
     property bool sortByTitleAscending: true
@@ -23,152 +30,17 @@ Item {
     property bool sortByArtistAscending: true
     property string currentSortColumn: "title" // Can be "title", "album", "artist", or "none"
 
-    // Statistics cache
-    property var statsCache: ({
-        totalDuration: "",
-        albumCount: 0,
-        artistCount: 0
-    })
-
     // Sort media files based on current sort column and direction
     function sortMediaFiles() {
-        let sortedFiles = [...mediaFiles]
-        
-        if (currentSortColumn === "title") {
-            sortedFiles.sort((a, b) => {
-                // Remove special characters and file extension for comparison
-                const titleA = a.replace('.mp3', '')
-                    .toLowerCase()
-                    .replace(/[^\w\s]|_/g, '')
-                    .trim()
-                const titleB = b.replace('.mp3', '')
-                    .toLowerCase()
-                    .replace(/[^\w\s]|_/g, '')
-                    .trim()
-                return sortByTitleAscending ? 
-                    titleA.localeCompare(titleB) : 
-                    titleB.localeCompare(titleA)
-            })
-        } else if (currentSortColumn === "album") {
-            sortedFiles.sort((a, b) => {
-                // Remove special characters from album names for comparison
-                const albumA = (mediaManager ? mediaManager.get_album(a) : "")
-                    .toLowerCase()
-                    .replace(/[^\w\s]|_/g, '')
-                    .trim()
-                const albumB = (mediaManager ? mediaManager.get_album(b) : "")
-                    .toLowerCase()
-                    .replace(/[^\w\s]|_/g, '')
-                    .trim()
-                return sortByAlbumAscending ? 
-                    albumA.localeCompare(albumB) : 
-                    albumB.localeCompare(albumA)
-            })
-        } else if (currentSortColumn === "artist") {
-            sortedFiles.sort((a, b) => {
-                // Remove special characters from artist names for comparison
-                const artistA = (mediaManager ? mediaManager.get_band(a) : "")
-                    .toLowerCase()
-                    .replace(/[^\w\s]|_/g, '')
-                    .trim()
-                const artistB = (mediaManager ? mediaManager.get_band(b) : "")
-                    .toLowerCase()
-                    .replace(/[^\w\s]|_/g, '')
-                    .trim()
-                return sortByArtistAscending ? 
-                    artistA.localeCompare(artistB) : 
-                    artistB.localeCompare(artistA)
-            })
+        if (mediaManager) {
+            // Call backend to perform the sorting
+            let ascending = currentSortColumn === "title" ? sortByTitleAscending : 
+                            currentSortColumn === "album" ? sortByAlbumAscending : 
+                            sortByArtistAscending
+            
+            mediaFiles = mediaManager.sort_media_files(currentSortColumn, ascending)
+            updateTimer.restart()
         }
-        
-        mediaFiles = sortedFiles
-        updateTimer.restart()
-    }
-
-    // Calculate total duration of all media files
-    function calculateTotalDuration() {
-        if (statsCache.totalDuration) return statsCache.totalDuration
-        if (!mediaManager || mediaFiles.length === 0) return "0:00:00"
-        
-        let totalMs = 0
-        for (let i = 0; i < mediaFiles.length; i++) {
-            let duration = mediaManager.get_formatted_duration(mediaFiles[i])
-            if (duration) {
-                let parts = duration.split(':')
-                let minutes = parseInt(parts[0])
-                let seconds = parseInt(parts[1])
-                totalMs += (minutes * 60 + seconds) * 1000
-            }
-        }
-        statsCache.totalDuration = formatTotalDuration(totalMs)
-        return statsCache.totalDuration
-    }
-
-    // Calculate unique albums count
-    function calculateUniqueAlbums() {
-        if (statsCache.albumCount) return statsCache.albumCount
-        if (!mediaManager || mediaFiles.length === 0) return 0
-        
-        let albums = new Set()
-        for (let i = 0; i < mediaFiles.length; i++) {
-            let album = mediaManager.get_album(mediaFiles[i])
-            if (album && album !== "Unknown Album") albums.add(album)
-        }
-        statsCache.albumCount = albums.size
-        return statsCache.albumCount
-    }
-
-    // Calculate unique artists count
-    function calculateUniqueArtists() {
-        if (statsCache.artistCount) return statsCache.artistCount
-        if (!mediaManager || mediaFiles.length === 0) return 0
-        
-        let artists = new Set()
-        for (let i = 0; i < mediaFiles.length; i++) {
-            let artist = mediaManager.get_band(mediaFiles[i])
-            if (artist && artist !== "Unknown Artist") artists.add(artist)
-        }
-        statsCache.artistCount = artists.size
-        return statsCache.artistCount
-    }
-
-    // Update statistics display
-    function updateStats() {
-        totalDurationText.text = calculateTotalDuration()
-        albumCountText.text = calculateUniqueAlbums()
-        artistCountText.text = calculateUniqueArtists()
-    }
-
-    // Clear statistics cache
-    function clearStatsCache() {
-        statsCache = {
-            totalDuration: "",
-            albumCount: 0,
-            artistCount: 0
-        }
-        currentFileIndex = 0
-    }
-
-    // Start statistics calculation
-    function startStatsCalculation() {
-        if (!isCalculating) {
-            clearStatsCache()
-            isCalculating = true
-            currentFileIndex = 0
-            statsCalculationTimer.start()
-        }
-    }
-
-    // Format milliseconds to hours:minutes:seconds
-    function formatTotalDuration(ms) {
-        let seconds = Math.floor(ms / 1000)
-        let minutes = Math.floor(seconds / 60)
-        let hours = Math.floor(minutes / 60)
-        
-        minutes = minutes % 60
-        seconds = seconds % 60
-        
-        return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
     }
 
     // Initialize component
@@ -180,7 +52,6 @@ Item {
                 lastPlayedSong = currentFile
                 isPaused = !mediaManager.is_playing()
             }
-            startStatsCalculation()
             updateTimer.restart()
         }
     }
@@ -198,83 +69,71 @@ Item {
         }
     }
 
-    // Statistics calculation timer (incremental)
-    Timer {
-        id: statsCalculationTimer
-        interval: 16  // Run every frame (~60fps)
-        repeat: true
-        property int batchSize: 50  // Process 50 files per batch
-
-        onTriggered: {
-            if (!isCalculating || !mediaManager || mediaFiles.length === 0) {
-                stop()
-                return
-            }
-
-            let endIndex = Math.min(currentFileIndex + batchSize, mediaFiles.length)
-            
-            // Process batch of files
-            for (let i = currentFileIndex; i < endIndex; i++) {
-                // Calculate duration
-                let duration = mediaManager.get_formatted_duration(mediaFiles[i])
-                if (duration) {
-                    let parts = duration.split(':')
-                    let minutes = parseInt(parts[0])
-                    let seconds = parseInt(parts[1])
-                    statsCache.totalMs = (statsCache.totalMs || 0) + (minutes * 60 + seconds) * 1000
-                }
-
-                // Collect unique albums
-                let album = mediaManager.get_album(mediaFiles[i])
-                if (album && album !== "Unknown Album") {
-                    statsCache.albums = statsCache.albums || new Set()
-                    statsCache.albums.add(album)
-                }
-
-                // Collect unique artists
-                let artist = mediaManager.get_band(mediaFiles[i])
-                if (artist && artist !== "Unknown Artist") {
-                    statsCache.artists = statsCache.artists || new Set()
-                    statsCache.artists.add(artist)
-                }
-            }
-
-            // Update progress
-            currentFileIndex = endIndex
-            
-            // Update UI with current progress
-            if (statsCache.totalMs) {
-                totalDurationText.text = formatTotalDuration(statsCache.totalMs)
-            }
-            if (statsCache.albums) {
-                albumCountText.text = statsCache.albums.size
-            }
-            if (statsCache.artists) {
-                artistCountText.text = statsCache.artists.size
-            }
-
-            // Check if calculation is complete
-            if (currentFileIndex >= mediaFiles.length) {
-                isCalculating = false
-                stop()
-            }
-        }
-    }
-
     // Main content
     Rectangle {
         anchors.fill: parent
         color: App.Style.backgroundColor
 
-        // Stats bar at the top
+        // Title bar at the top
         Rectangle {
-            id: statsBar
+            id: titleBar
             anchors {
                 left: parent.left
                 right: parent.right
                 top: parent.top
             }
-            height: App.Spacing.mediaPlayerStatsBarHeight
+            height: App.Spacing.mediaPlayerStatsBarHeight * 1.5
+            color: App.Style.headerBackgroundColor
+            z: 2
+
+            RowLayout {
+                anchors.fill: parent
+                anchors.leftMargin: App.Spacing.overallMargin * 2
+                anchors.rightMargin: App.Spacing.overallMargin * 2
+                spacing: App.Spacing.overallMargin * 2
+
+                // Back button
+                Rectangle {
+                    Layout.preferredWidth: height
+                    Layout.fillHeight: true
+                    color: "transparent"
+                    
+                    Image {
+                        anchors.centerIn: parent
+                        width: parent.width * 0.6
+                        height: width
+                        source: "./assets/back_icon.png"
+                        fillMode: Image.PreserveAspectFit
+                    }
+                    
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: {
+                            stackView.pop()
+                        }
+                    }
+                }
+                
+                // Library title
+                Text {
+                    Layout.fillWidth: true
+                    text: currentLibraryName
+                    color: App.Style.primaryTextColor
+                    font.pixelSize: App.Spacing.mediaPlayerStatsTextSize * 1.4
+                    font.bold: true
+                }
+            }
+        }
+
+        // Stats bar below title bar
+        Rectangle {
+            id: statsBar
+            anchors {
+                left: parent.left
+                right: parent.right
+                top: titleBar.bottom
+            }
+            height: App.Spacing.mediaPlayerStatsBarHeight * 1.2
             color: App.Style.headerBackgroundColor
             z: 1
 
@@ -292,12 +151,12 @@ Item {
                     Text {
                         text: "Songs:"
                         color: App.Style.secondaryTextColor
-                        font.pixelSize: App.Spacing.mediaPlayerStatsTextSize
+                        font.pixelSize: App.Spacing.mediaPlayerStatsTextSize * 1.2
                     }
                     Text {
                         text: mediaFiles.length
                         color: App.Style.secondaryTextColor
-                        font.pixelSize: App.Spacing.mediaPlayerStatsTextSize
+                        font.pixelSize: App.Spacing.mediaPlayerStatsTextSize * 1.2
                         font.bold: true
                     }
                 }
@@ -308,13 +167,13 @@ Item {
                     Text {
                         text: "Albums:"
                         color: App.Style.secondaryTextColor
-                        font.pixelSize: App.Spacing.mediaPlayerStatsTextSize
+                        font.pixelSize: App.Spacing.mediaPlayerStatsTextSize * 1.2
                     }
                     Text {
                         id: albumCountText
-                        text: "-"
+                        text: mediaManager ? mediaManager.get_album_count() : "-"
                         color: App.Style.secondaryTextColor
-                        font.pixelSize: App.Spacing.mediaPlayerStatsTextSize
+                        font.pixelSize: App.Spacing.mediaPlayerStatsTextSize * 1.2
                         font.bold: true
                     }
                 }
@@ -325,30 +184,13 @@ Item {
                     Text {
                         text: "Artists:"
                         color: App.Style.secondaryTextColor
-                        font.pixelSize: App.Spacing.mediaPlayerStatsTextSize
+                        font.pixelSize: App.Spacing.mediaPlayerStatsTextSize * 1.2
                     }
                     Text {
                         id: artistCountText
-                        text: "-"
+                        text: mediaManager ? mediaManager.get_artist_count() : "-"
                         color: App.Style.secondaryTextColor
-                        font.pixelSize: App.Spacing.mediaPlayerStatsTextSize
-                        font.bold: true
-                    }
-                }
-
-                // Total Duration
-                RowLayout {
-                    spacing: App.Spacing.overallMargin
-                    Text {
-                        text: "Total Duration:"
-                        color: App.Style.secondaryTextColor
-                        font.pixelSize: App.Spacing.mediaPlayerStatsTextSize
-                    }
-                    Text {
-                        id: totalDurationText
-                        text: "--:--:--"
-                        color: App.Style.secondaryTextColor
-                        font.pixelSize: App.Spacing.mediaPlayerStatsTextSize
+                        font.pixelSize: App.Spacing.mediaPlayerStatsTextSize * 1.2
                         font.bold: true
                     }
                 }
@@ -356,6 +198,23 @@ Item {
                 // Spacer
                 Item {
                     Layout.fillWidth: true
+                }
+                
+                // Total Duration
+                RowLayout {
+                    spacing: App.Spacing.overallMargin
+                    Text {
+                        text: "Total:"
+                        color: App.Style.secondaryTextColor
+                        font.pixelSize: App.Spacing.mediaPlayerStatsTextSize * 1.2
+                    }
+                    Text {
+                        id: totalDurationText
+                        text: mediaManager ? mediaManager.get_total_duration() : "--:--:--"
+                        color: App.Style.secondaryTextColor
+                        font.pixelSize: App.Spacing.mediaPlayerStatsTextSize * 1.2
+                        font.bold: true
+                    }
                 }
             }
         }
@@ -366,7 +225,7 @@ Item {
             anchors {
                 fill: parent
                 margins: App.Spacing.overallMargin
-                topMargin: statsBar.height + App.Spacing.overallMargin
+                topMargin: titleBar.height + statsBar.height + App.Spacing.overallMargin
             }
             color: App.Style.backgroundColor
 
@@ -377,8 +236,15 @@ Item {
                 // Table header
                 Rectangle {
                     Layout.fillWidth: true
-                    height: App.Spacing.mediaPlayerHeaderHeight
+                    height: App.Spacing.mediaPlayerHeaderHeight * 1.3
                     color: App.Style.headerBackgroundColor
+                    
+                    Rectangle {
+                        width: parent.width
+                        height: 2
+                        color: App.Style.accent
+                        anchors.top: parent.top
+                    }
 
                     RowLayout {
                         anchors.fill: parent
@@ -386,18 +252,9 @@ Item {
                         anchors.rightMargin: App.Spacing.overallMargin * 2
                         spacing: 0
 
-                        // Index header
-                        Text {
-                            text: "#"
-                            color: App.Style.headerTextColor
-                            font.pixelSize: App.Spacing.mediaPlayerTextSize
-                            font.bold: true
-                            Layout.preferredWidth: parent.width * 0.05 // 5% for index column
-                        }
-
                         // Title header with sort functionality
                         Item {
-                            Layout.preferredWidth: parent.width * 0.35 // 35% for title column
+                            Layout.preferredWidth: parent.width * 0.4
                             Layout.fillHeight: true
 
                             MouseArea {
@@ -415,17 +272,17 @@ Item {
 
                             Text {
                                 anchors.verticalCenter: parent.verticalCenter
-                                text: "Title " + (currentSortColumn === "title" ? 
+                                text: "TITLE " + (currentSortColumn === "title" ? 
                                     (sortByTitleAscending ? "↑" : "↓") : "")
                                 color: App.Style.headerTextColor
-                                font.pixelSize: App.Spacing.mediaPlayerTextSize
+                                font.pixelSize: App.Spacing.mediaPlayerTextSize * 1.2
                                 font.bold: true
                             }
                         }
 
                         // Artist header with sort functionality
                         Item {
-                            Layout.preferredWidth: parent.width * 0.3 // 30% for artist column
+                            Layout.preferredWidth: parent.width * 0.3
                             Layout.fillHeight: true
 
                             MouseArea {
@@ -443,17 +300,17 @@ Item {
 
                             Text {
                                 anchors.verticalCenter: parent.verticalCenter
-                                text: "Artist " + (currentSortColumn === "artist" ? 
+                                text: "ARTIST " + (currentSortColumn === "artist" ? 
                                     (sortByArtistAscending ? "↑" : "↓") : "")
                                 color: App.Style.headerTextColor
-                                font.pixelSize: App.Spacing.mediaPlayerTextSize
+                                font.pixelSize: App.Spacing.mediaPlayerTextSize * 1.2
                                 font.bold: true
                             }
                         }
 
                         // Album header with sort functionality
                         Item {
-                            Layout.preferredWidth: parent.width * 0.3 // 30% for album column
+                            Layout.preferredWidth: parent.width * 0.3
                             Layout.fillHeight: true
 
                             MouseArea {
@@ -471,10 +328,10 @@ Item {
 
                             Text {
                                 anchors.verticalCenter: parent.verticalCenter
-                                text: "Album " + (currentSortColumn === "album" ? 
+                                text: "ALBUM " + (currentSortColumn === "album" ? 
                                     (sortByAlbumAscending ? "↑" : "↓") : "")
                                 color: App.Style.headerTextColor
-                                font.pixelSize: App.Spacing.mediaPlayerTextSize
+                                font.pixelSize: App.Spacing.mediaPlayerTextSize * 1.2
                                 font.bold: true
                             }
                         }
@@ -492,123 +349,301 @@ Item {
                     displayMarginBeginning: 40
                     displayMarginEnd: 40
                     reuseItems: true
+                    
+                    // Add spacing between items
+                    spacing: 6
 
                     // List item delegate
-                    delegate: ItemDelegate {
+                    delegate: Item {
                         id: delegate
                         width: ListView.view.width
-                        height: App.Spacing.mediaPlayerRowHeight
+                        height: App.Spacing.mediaPlayerRowHeight * 1.4
                         visible: y >= mediaListView.contentY - height && 
                                 y <= mediaListView.contentY + mediaListView.height
-
-                        Rectangle {
-                            anchors.fill: parent
-                            color: {
-                                if (lastPlayedSong === modelData && mediaManager) {
-                                    return mediaManager.get_current_file() === modelData ?
-                                        (mediaManager.is_playing() ? 
-                                            App.Style.playingHighlightColor : 
-                                            App.Style.pausedHighlightColor) :
-                                        App.Style.rowBackgroundColor
-                                }
-                                return App.Style.rowBackgroundColor
+                                
+                        // Active song properties
+                        property bool isCurrentSong: lastPlayedSong === modelData
+                        property bool isPlaying: isCurrentSong && mediaManager && mediaManager.is_playing()
+                        
+                        // Properties for album art
+                        property var albumArtSource: visible ? 
+                            (mediaManager ? 
+                                mediaManager.get_album_art(modelData) || 
+                                "./assets/missing_art.jpg" : 
+                                "./assets/missing_art.jpg") : 
+                            ""
+                        
+                        // Generate consistent value based on song name
+                        property real randomValue: {
+                            var hash = 0;
+                            for (var i = 0; i < modelData.length; i++) {
+                                hash = ((hash << 5) - hash) + modelData.charCodeAt(i);
+                                hash = hash & hash;
                             }
-                            Behavior on color { ColorAnimation { duration: 150 } }
+                            return Math.abs(hash) / 2147483647;
+                        }
+                                                
+                        // Modern glass-style card with theme awareness
+                        Rectangle {
+                            id: glassCard
+                            anchors.fill: parent
+                            anchors.margins: 2
+                            radius: 10
+                                                        
+                            // Glass background - adapts to app theme colors
+                            color: {
+                                // Extract theme primary colors
+                                var baseColor = App.Style.backgroundColor;
+                                
+                                // Adjust opacity based on whether this is the current song
+                                var alpha = delegate.isCurrentSong ? 0.4 : 0.25;
+                                
+                                // Create a glass effect by using semi-transparent theme color
+                                return Qt.rgba(
+                                    baseColor.r * 0.9, 
+                                    baseColor.g * 0.9, 
+                                    baseColor.b * 0.9, 
+                                    alpha
+                                );
+                            }
+                            
+                            // Inner border for glass effect
+                            border.width: 1
+                            border.color: {
+                                var baseColor = App.Style.accent;
+                                return Qt.rgba(
+                                    baseColor.r, 
+                                    baseColor.g, 
+                                    baseColor.b, 
+                                    delegate.isCurrentSong ? 0.7 : 0.1
+                                );
+                            }
+                            
+                            // Create art-based accent layer as a strip on the left side
+                            Rectangle {
+                                id: accentStrip
+                                width: delegate.isCurrentSong ? parent.width : 4
+                                height: parent.height
+                                anchors.left: parent.left
+                                anchors.verticalCenter: parent.verticalCenter
+                                radius: parent.radius
+                                
+                                // Clip to only show left part
+                                clip: true
+                                
+                                // Gradient based on album art
+                                gradient: Gradient {
+                                    orientation: delegate.isCurrentSong ? 
+                                        Gradient.Horizontal : Gradient.Vertical
+                                        
+                                    GradientStop {
+                                        position: 0.0
+                                        color: {
+                                            // Create an accent color from app accent color
+                                            var accentBase = App.Style.accent;
+                                            
+                                            // Adjust transparency based on if it's the current song
+                                            var alpha = delegate.isCurrentSong ? 0.25 : 0.35;
+                                            
+                                            return Qt.rgba(
+                                                accentBase.r, 
+                                                accentBase.g, 
+                                                accentBase.b, 
+                                                alpha
+                                            );
+                                        }
+                                    }
+                                    
+                                    GradientStop {
+                                        position: 1.0
+                                        color: "transparent"
+                                    }
+                                }
+                                
+                                // Album art as texture overlay with varying opacity
+                                Image {
+                                    anchors.fill: parent
+                                    source: delegate.albumArtSource
+                                    fillMode: Image.PreserveAspectCrop
+                                    opacity: 0.3
+                                    visible: delegate.isCurrentSong
+                                    
+                                    // Create a small random offset for visual interest
+                                    transform: Translate {
+                                        x: -10 + (delegate.randomValue * 20)
+                                        y: -10 + ((1 - delegate.randomValue) * 20)
+                                    }
+                                }
+                            }
+                            
+                            // Active song indicator - glowing accent bar
+                            Rectangle {
+                                visible: delegate.isCurrentSong
+                                width: 6
+                                height: parent.height
+                                radius: width / 2
+                                anchors.left: parent.left
+                                anchors.leftMargin: 2
+                                anchors.verticalCenter: parent.verticalCenter
+                                color: App.Style.accent
+                                opacity: pulseAnimation.opacity
+                                
+                                // Pulse animation
+                                SequentialAnimation {
+                                    id: pulseAnimation
+                                    running: delegate.isPlaying
+                                    loops: Animation.Infinite
+                                    alwaysRunToEnd: true
+                                    property real opacity: 1.0
+                                    
+                                    NumberAnimation {
+                                        target: pulseAnimation
+                                        property: "opacity"
+                                        from: 0.7
+                                        to: 1.0
+                                        duration: 800
+                                        easing.type: Easing.InOutQuad
+                                    }
+                                    NumberAnimation {
+                                        target: pulseAnimation
+                                        property: "opacity"
+                                        from: 1.0
+                                        to: 0.7
+                                        duration: 800
+                                        easing.type: Easing.InOutQuad
+                                    }
+                                }
+                            }
 
                             RowLayout {
                                 anchors.fill: parent
-                                anchors.margins: App.Spacing.overallMargin * 2
+                                anchors.leftMargin: delegate.isCurrentSong ? 
+                                    App.Spacing.overallMargin * 3 : 
+                                    App.Spacing.overallMargin * 2
+                                anchors.rightMargin: App.Spacing.overallMargin * 2
                                 spacing: 0
-
-                                // Index column
-                                Text {
-                                    Layout.preferredWidth: parent.width * 0.05 // 5% for index column
-                                    text: (index + 1).toString()
-                                    color: App.Style.secondaryTextColor
-                                    font.pixelSize: App.Spacing.mediaPlayerSecondaryTextSize
-                                    horizontalAlignment: Text.AlignLeft
-                                }
 
                                 // Title section (with album art)
                                 RowLayout {
-                                    Layout.preferredWidth: parent.width * 0.35 // 35% for title column
+                                    Layout.preferredWidth: parent.width * 0.4
+                                    Layout.fillHeight: true
                                     spacing: App.Spacing.overallMargin * 2
 
-                                    // Album art
-                                    LazyImage {
-                                        Layout.preferredWidth: App.Spacing.mediaPlayerAlbumArtSize
-                                        Layout.preferredHeight: App.Spacing.mediaPlayerAlbumArtSize
-                                        fidelity: 120
-                                        smoothing: true
-                                        mipmap: true
-                                        antialiasing: true
-                                        quality: 0.7
-                                        source: visible ? 
-                                            (mediaManager ? 
-                                                mediaManager.get_album_art(modelData) || 
-                                                "./assets/missing_art.jpg" : 
-                                                "./assets/missing_art.jpg") : 
-                                            ""
+                                    // Album art with frame - simplified
+                                    Rectangle {
+                                        id: albumArtContainer
+                                        Layout.preferredWidth: App.Spacing.mediaPlayerAlbumArtSize * 1.3
+                                        Layout.preferredHeight: App.Spacing.mediaPlayerAlbumArtSize * 1.3
+                                        radius: 8
+                                        color: Qt.rgba(1, 1, 1, 0.08) // Subtle glass effect
+                                        border.width: 1
+                                        border.color: Qt.rgba(1, 1, 1, 0.2)
+                                        clip: true // Simple clipping for rounded corners
+                                        
+                                        // Album art image
+                                        Image {
+                                            id: albumArt
+                                            anchors.fill: parent
+                                            anchors.margins: 3
+                                            source: delegate.albumArtSource
+                                            sourceSize.width: width * 1.5
+                                            sourceSize.height: height * 1.5
+                                            fillMode: Image.PreserveAspectCrop
+                                            asynchronous: true
+                                            cache: true
+                                            smooth: true
+                                        }
+                                        
+                                        // Simple highlight effect for glass appearance
+                                        Rectangle {
+                                            anchors.left: parent.left
+                                            anchors.right: parent.right
+                                            anchors.top: parent.top
+                                            anchors.margins: 3
+                                            height: parent.height * 0.3
+                                            radius: 6
+                                            color: "white"
+                                            opacity: 0.1
+                                        }
                                     }
 
-                                    // Title and duration
-                                    ColumnLayout {
+                                    // Title and duration container
+                                    Item {
                                         Layout.fillWidth: true
-                                        spacing: App.Spacing.overallMargin
+                                        Layout.fillHeight: true
+                                        clip: true
+                                        
+                                        ColumnLayout {
+                                            anchors.left: parent.left
+                                            anchors.right: parent.right
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            spacing: App.Spacing.overallMargin
 
-                                        // Song title
-                                        Text {
-                                            Layout.fillWidth: true
-                                            text: modelData.replace('.mp3', '')
-                                            color: lastPlayedSong === modelData ? 
-                                                App.Style.accent : 
-                                                App.Style.primaryTextColor
-                                            font.pixelSize: App.Spacing.mediaPlayerTextSize
-                                            font.bold: true
-                                            elide: Text.ElideRight
-                                        }
+                                            // Song title
+                                            Text {
+                                                Layout.fillWidth: true
+                                                text: modelData.replace('.mp3', '')
+                                                color: App.Style.primaryTextColor
+                                                font.pixelSize: App.Spacing.mediaPlayerTextSize * 1.2
+                                                font.bold: true
+                                                elide: Text.ElideRight
+                                            }
 
-                                        // Duration
-                                        Text {
-                                            text: mediaManager ? 
-                                                mediaManager.get_formatted_duration(modelData) : 
-                                                "0:00"
-                                            color: App.Style.secondaryTextColor
-                                            font.pixelSize: App.Spacing.mediaPlayerSecondaryTextSize
-                                            elide: Text.ElideRight
+                                            // Duration
+                                            Text {
+                                                text: mediaManager ? 
+                                                    mediaManager.get_formatted_duration(modelData) : 
+                                                    "0:00"
+                                                color: App.Style.secondaryTextColor
+                                                font.pixelSize: App.Spacing.mediaPlayerSecondaryTextSize * 1.1
+                                                elide: Text.ElideRight
+                                            }
                                         }
                                     }
                                 }
 
                                 // Artist column
-                                Text {
-                                    Layout.preferredWidth: parent.width * 0.3 // 30% for artist column
-                                    text: mediaManager ? 
-                                        mediaManager.get_band(modelData) : 
-                                        "Unknown Artist"
-                                    color: App.Style.secondaryTextColor
-                                    font.pixelSize: App.Spacing.mediaPlayerSecondaryTextSize
-                                    horizontalAlignment: Text.AlignLeft
-                                    elide: Text.ElideRight
+                                Item {
+                                    Layout.preferredWidth: parent.width * 0.3
+                                    Layout.fillHeight: true
+                                    clip: true
+                                    
+                                    Text {
+                                        anchors.left: parent.left
+                                        anchors.right: parent.right
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        text: mediaManager ? 
+                                            mediaManager.get_band(modelData) : 
+                                            "Unknown Artist"
+                                        color: App.Style.secondaryTextColor
+                                        font.pixelSize: App.Spacing.mediaPlayerSecondaryTextSize * 1.2
+                                        elide: Text.ElideRight
+                                    }
                                 }
 
                                 // Album column
-                                Text {
-                                    Layout.preferredWidth: parent.width * 0.3 // 30% for album column
-                                    text: mediaManager ? 
-                                        mediaManager.get_album(modelData) : 
-                                        "Unknown Album"
-                                    color: App.Style.secondaryTextColor
-                                    font.pixelSize: App.Spacing.mediaPlayerSecondaryTextSize
-                                    horizontalAlignment: Text.AlignLeft
-                                    elide: Text.ElideRight
+                                Item {
+                                    Layout.preferredWidth: parent.width * 0.3
+                                    Layout.fillHeight: true
+                                    clip: true
+                                    
+                                    Text {
+                                        anchors.left: parent.left
+                                        anchors.right: parent.right
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        text: mediaManager ? 
+                                            mediaManager.get_album(modelData) : 
+                                            "Unknown Album"
+                                        color: App.Style.secondaryTextColor
+                                        font.pixelSize: App.Spacing.mediaPlayerSecondaryTextSize * 1.2
+                                        elide: Text.ElideRight
+                                    }
                                 }
                             }
-
+                            
                             // Click behavior for list items
                             MouseArea {
                                 anchors.fill: parent
-                                hoverEnabled: false
                                 onClicked: {
                                     if (mediaManager) {
                                         mediaManager.play_file(modelData)
@@ -618,25 +653,39 @@ Item {
                                         })
                                     }
                                 }
-                                onEntered: parent.color = lastPlayedSong === modelData && 
-                                    mediaManager ? 
-                                    (mediaManager.is_playing() ? 
-                                        App.Style.hoverPlayingColor : 
-                                        App.Style.hoverPausedColor) : 
-                                    App.Style.hoverColor
-                                onExited: parent.color = lastPlayedSong === modelData && 
-                                    mediaManager ? 
-                                    (mediaManager.is_playing() ? 
-                                        App.Style.playingHighlightColor : 
-                                        App.Style.pausedHighlightColor) : 
-                                    App.Style.rowBackgroundColor
+                            }
+                            
+                            // Add subtle scaling effect on active song
+                            scale: delegate.isCurrentSong ? 1.02 : 1.0
+                            Behavior on scale {
+                                NumberAnimation { 
+                                    duration: 200
+                                    easing.type: Easing.OutCubic 
+                                }
+                            }
+                            
+                            // Shadow for depth (using Rectangle instead of effects)
+                            Rectangle {
+                                z: -1
+                                anchors.fill: parent
+                                anchors.margins: -2
+                                radius: parent.radius + 2
+                                color: "black"
+                                opacity: delegate.isCurrentSong ? 0.15 : 0.08
                             }
                         }
                     }
 
-                    // Scrollbar
+                    // Scrollbar - made wider for touch screens
                     ScrollBar.vertical: ScrollBar {
+                        id: verticalScrollBar
                         active: true
+                        width: 12
+                        contentItem: Rectangle {
+                            implicitWidth: 12
+                            radius: width / 2
+                            color: App.Style.accent
+                        }
                     }
                 }
             }
@@ -646,7 +695,7 @@ Item {
                 anchors.centerIn: parent
                 text: "No songs found in media folder"
                 color: App.Style.primaryTextColor
-                font.pixelSize: App.Spacing.mediaPlayerTextSize
+                font.pixelSize: App.Spacing.mediaPlayerTextSize * 1.3
                 visible: mediaListView.count === 0
             }
         }
@@ -658,18 +707,16 @@ Item {
         
         // Media list updated
         function onMediaListChanged(files) {
-            mediaFiles = files
-            if (currentSortColumn !== "none") {
-                sortMediaFiles()
-            } else {
-                updateTimer.restart()
+            if (mediaFiles.length !== files.length) {
+                console.log("Media list updated: " + files.length + " files");
+                mediaFiles = files;
+                
+                if (currentSortColumn !== "none") {
+                    sortMediaFiles();
+                } else {
+                    updateTimer.restart();
+                }
             }
-            startStatsCalculation()
-        }
-        
-        // Duration format updated
-        function onDurationFormatChanged(duration) {
-            // Placeholder for any future functionality
         }
         
         // Current media changed
@@ -688,6 +735,33 @@ Item {
                 }
             }
             updateTimer.restart()
+        }
+        
+        // Statistics updates
+        function onTotalDurationChanged(duration) {
+            totalDurationText.text = duration
+        }
+        
+        function onAlbumCountChanged(count) {
+            albumCountText.text = count
+        }
+        
+        function onArtistCountChanged(count) {
+            artistCountText.text = count
+        }
+    }
+    
+    // Update library name when media folder changes
+    Connections {
+        target: settingsManager
+        function onMediaFolderChanged() {
+            // Extract folder name from full path
+            if (settingsManager && settingsManager.mediaFolder) {
+                const parts = settingsManager.mediaFolder.split(/[/\\]/)
+                currentLibraryName = parts[parts.length - 1] || "Music Library"
+            } else {
+                currentLibraryName = "Music Library"
+            }
         }
     }
 }

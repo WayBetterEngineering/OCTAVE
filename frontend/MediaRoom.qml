@@ -476,6 +476,7 @@ Item {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     Layout.preferredWidth: parent.width * 0.7  // Allocate 70% to metadata
+                    Layout.leftMargin: 20
                     spacing: App.Spacing.mediaRoomSpacing
 
                     // Media Controls Row

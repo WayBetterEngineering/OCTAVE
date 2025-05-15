@@ -6,20 +6,20 @@
     "showClock": true,
     "clockSize": 38,
     "backgroundGrid": "Normal",
-    "screenWidth": 1920,
-    "screenHeight": 1017,
+    "screenWidth": 1157,
+    "screenHeight": 382,
     "backgroundBlurRadius": 15,
     "uiScale": 0.65,
     "obdParameters": {
-        "COOLANT_TEMP": false,
-        "CONTROL_MODULE_VOLTAGE": false,
-        "ENGINE_LOAD": false,
-        "THROTTLE_POS": false,
+        "COOLANT_TEMP": true,
+        "CONTROL_MODULE_VOLTAGE": true,
+        "ENGINE_LOAD": true,
+        "THROTTLE_POS": true,
         "INTAKE_TEMP": true,
         "TIMING_ADVANCE": true,
         "MAF": true,
-        "SPEED": false,
-        "RPM": false,
+        "SPEED": true,
+        "RPM": true,
         "COMMANDED_EQUIV_RATIO": true,
         "FUEL_LEVEL": true,
         "INTAKE_PRESSURE": true,
@@ -42,7 +42,12 @@
         "C:\\Users\\Robde\\Music\\The Great Outdoors",
         "C:\\Users\\Robde\\Music\\Bangers & Mash"
     ],
-    "homeOBDParameters": [],
+    "homeOBDParameters": [
+        "TIMING_ADVANCE",
+        "SPEED",
+        "CONTROL_MODULE_VOLTAGE",
+        "ENGINE_LOAD"
+    ],
     "customThemes": {},
-    "bottomBarOrientation": "bottom"
+    "bottomBarOrientation": "side"
 }

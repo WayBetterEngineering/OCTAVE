@@ -1430,7 +1430,6 @@ Item {
                                 })
                             }
 
-                             
                             ColumnLayout { // UI Scaling slider
                                 Layout.fillWidth: true
                                 spacing: App.Spacing.rowSpacing
@@ -1612,7 +1611,6 @@ Item {
                             }
                             
                             SettingsDivider {}
-                            
                             
                             ColumnLayout { // Theme Selection
                                 Layout.fillWidth: true
@@ -2880,7 +2878,11 @@ Item {
                                 }
                             }
                         
-                            Item { Layout.fillHeight: true } // Spacer
+                            // Bottom spacer
+                            Item { 
+                                Layout.fillHeight: true
+                                Layout.minimumHeight: App.Spacing.bottomBar
+                            }
                         }
                     }
                     
@@ -3659,7 +3661,7 @@ Item {
                             // Bottom spacer
                             Item { 
                                 Layout.fillHeight: true
-                                Layout.minimumHeight: App.Spacing.bottomBarHeight
+                                Layout.minimumHeight: App.Spacing.bottomBar
                             }
 
                             function updateHomeDisplay() {
@@ -3683,174 +3685,6 @@ Item {
                         }
                     }
 
-                    // Simple dialog for removing parameters - auto-closes immediately after command
-                    Dialog {
-                        id: removeConfirmDialog
-                        title: "Remove Parameter"
-                        width: 300
-                        height: 150
-                        anchors.centerIn: parent
-                        modal: true
-                        
-                        property string paramToRemove: ""
-                        
-                        contentItem: ColumnLayout {
-                            spacing: 10
-                            
-                            Text {
-                                text: "Remove this parameter from the home screen?"
-                                color: App.Style.primaryTextColor
-                                wrapMode: Text.WordWrap
-                                Layout.fillWidth: true
-                            }
-                            
-                            RowLayout {
-                                Layout.alignment: Qt.AlignRight
-                                spacing: 10
-
-                                Button {
-                                    text: "Remove"
-                                    onClicked: {
-                                        if (settingsManager && removeConfirmDialog.paramToRemove) {
-                                            let homeParams = settingsManager.get_home_obd_parameters();
-                                            let index = homeParams.indexOf(removeConfirmDialog.paramToRemove);
-                                            if (index !== -1) {
-                                                homeParams.splice(index, 1);
-                                                settingsManager.save_home_obd_parameters(homeParams);
-                                            }
-                                        }
-                                        removeConfirmDialog.close();
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    // Replace dialog - improved to show all items without overflow
-                    Dialog {
-                        id: replaceDialog
-                        title: "Home Screen Full"
-                        width: 400
-                        // Adjust height to accommodate all items (4 items of 50px each + header + message + padding)
-                        height: 350
-                        anchors.centerIn: parent
-                        modal: true
-                        
-                        property string paramToAdd: ""
-                        
-                        // Force the dialog to refresh its model when opened
-                        onOpened: {
-                            // Short delay to ensure we get the latest data
-                            Qt.callLater(function() {
-                                currentHomeParamsModel = settingsManager ? settingsManager.get_home_obd_parameters() : [];
-                            });
-                        }
-                        
-                        // Store the current parameters when dialog opens
-                        property var currentHomeParamsModel: []
-                        
-                        contentItem: ColumnLayout {
-                            spacing: 10
-                            
-                            Text {
-                                text: "Your home screen can display up to 4 parameters. Select a parameter to replace:"
-                                color: App.Style.primaryTextColor
-                                wrapMode: Text.WordWrap
-                                Layout.fillWidth: true
-                                Layout.topMargin: 5
-                                Layout.bottomMargin: 5
-                            }
-                            
-                            // Disable scrolling and use fixed layout for consistent display
-                            Item {
-                                Layout.fillWidth: true
-                                // Fixed height to fit all 4 items (4 × 50px)
-                                Layout.preferredHeight: 200
-                                
-                                Column {
-                                    anchors.fill: parent
-                                    spacing: 5
-                                    
-                                    Repeater {
-                                        model: replaceDialog.currentHomeParamsModel
-                                        
-                                        delegate: Rectangle {
-                                            width: parent.width
-                                            height: 45
-                                            color: delegateMouse.containsMouse ? App.Style.hoverColor : "transparent"
-                                            radius: 4
-                                            
-                                            // Parameter display name mapping
-                                            property string displayName: {
-                                                const paramNames = {
-                                                    "SPEED": "Speed",
-                                                    "RPM": "RPM",
-                                                    "COOLANT_TEMP": "Temperature",
-                                                    "CONTROL_MODULE_VOLTAGE": "Voltage",
-                                                    "ENGINE_LOAD": "Load",
-                                                    "THROTTLE_POS": "Throttle",
-                                                    "INTAKE_TEMP": "Intake Temp",
-                                                    "TIMING_ADVANCE": "Timing",
-                                                    "MAF": "Air Flow",
-                                                    "COMMANDED_EQUIV_RATIO": "AFR",
-                                                    "FUEL_LEVEL": "Fuel",
-                                                    "INTAKE_PRESSURE": "MAP",
-                                                    "SHORT_FUEL_TRIM_1": "STFT",
-                                                    "LONG_FUEL_TRIM_1": "LTFT",
-                                                    "O2_B1S1": "O2",
-                                                    "FUEL_PRESSURE": "Fuel Press",
-                                                    "OIL_TEMP": "Oil Temp",
-                                                    "IGNITION_TIMING": "Ignition"
-                                                };
-                                                return paramNames[modelData] || modelData;
-                                            }
-                                            
-                                            RowLayout {
-                                                anchors.fill: parent
-                                                anchors.leftMargin: 10
-                                                anchors.rightMargin: 10
-                                                
-                                                Text {
-                                                    text: "🏠"
-                                                    font.pixelSize: 16
-                                                }
-                                                
-                                                Text {
-                                                    text: displayName
-                                                    color: App.Style.primaryTextColor
-                                                    font.pixelSize: App.Spacing.overallText
-                                                    Layout.fillWidth: true
-                                                }
-                                            }
-                                            
-                                            MouseArea {
-                                                id: delegateMouse
-                                                anchors.fill: parent
-                                                hoverEnabled: true
-                                                onClicked: {
-                                                    if (settingsManager && replaceDialog.paramToAdd) {
-                                                        let homeParams = settingsManager.get_home_obd_parameters();
-                                                        let index = homeParams.indexOf(modelData);
-                                                        if (index !== -1) {
-                                                            homeParams[index] = replaceDialog.paramToAdd;
-                                                            settingsManager.save_home_obd_parameters(homeParams);
-                                                        }
-                                                    }
-                                                    replaceDialog.close();
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            
-                            Item {
-                                Layout.fillHeight: true
-                            }
-                            
-                        }
-                    }
-                    
                     ScrollView { // Clock Settings Page
                         contentWidth: parent.width
                         ScrollBar.vertical.policy: ScrollBar.AsNeeded
