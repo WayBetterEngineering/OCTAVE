@@ -1,15 +1,15 @@
 {
     "deviceName": "OCTAVE",
-    "themeSetting": "CosmicVoyager",
-    "startUpVolume": 0.21,
+    "themeSetting": "TechnoRetro",
+    "startUpVolume": 0.29,
     "clockFormat24Hour": true,
     "showClock": true,
     "clockSize": 38,
     "backgroundGrid": "Normal",
-    "screenWidth": 1707,
-    "screenHeight": 889,
+    "screenWidth": 948,
+    "screenHeight": 475,
     "backgroundBlurRadius": 20,
-    "uiScale": 0.65,
+    "uiScale": 0.55,
     "obdParameters": {
         "COOLANT_TEMP": true,
         "CONTROL_MODULE_VOLTAGE": true,
@@ -49,5 +49,5 @@
         "ENGINE_LOAD"
     ],
     "customThemes": {},
-    "bottomBarOrientation": "side"
+    "bottomBarOrientation": "bottom"
 }

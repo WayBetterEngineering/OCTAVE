@@ -634,7 +634,7 @@ Item {
                         // Song title with scrolling
                         Item {
                             Layout.fillWidth: true
-                            height: App.Spacing.mediaRoomMetaDataSongText + 10 // Some extra padding
+                            height: App.Spacing.mediaRoomMetaDataSongText
                             
                             Flickable {
                                 id: songTitleFlickable

@@ -440,8 +440,7 @@ class MediaManager(QObject):
         if not self._current_playlist:
             files = self.get_media_files()
             if files:
-                # Sort files alphabetically but ignore special characters
-                import re
+
                 self._current_playlist = sorted(files, key=lambda x: re.sub(r'[^\w\s]|_', '', x.lower()))
                 self._current_index = 0
                 # Return the first file from the sorted playlist but don't play it
@@ -454,20 +453,19 @@ class MediaManager(QObject):
         # Fallback to first file if index is invalid
         files = self.get_media_files()
         if files:
-            # Sort files alphabetically but ignore special characters
-            import re
             self._current_playlist = sorted(files, key=lambda x: re.sub(r'[^\w\s]|_', '', x.lower()))
             self._current_index = 0
-            return files[0]
+            return self._current_playlist[0]
             
         return ""
+    
     @Slot(str)
     def play_file(self, filename):
         """Play specified file"""
         # Initialize current_playlist if needed
         if not self._current_playlist:
             try:
-                self._current_playlist = self._shuffle_playlist() if self._shuffle else sorted(self.get_media_files())
+                self._current_playlist = self._shuffle_playlist() if self._shuffle else sorted(self.get_media_files(), key=lambda x: re.sub(r'[^\w\s]|_', '', x.lower()))
             except Exception as e:
                 print(f"Error initializing playlist: {e}")
                 self._current_playlist = []
@@ -483,7 +481,7 @@ class MediaManager(QObject):
                 self._current_index = self._current_playlist.index(filename)
             elif not self._shuffle:
                 # If not found and not shuffled, rebuild alphabetical playlist
-                self._current_playlist = sorted(self.get_media_files())
+                self._current_playlist = sorted(self.get_media_files(), key=lambda x: re.sub(r'[^\w\s]|_', '', x.lower()))
                 if filename in self._current_playlist:
                     self._current_index = self._current_playlist.index(filename)
                 else:
@@ -528,7 +526,7 @@ class MediaManager(QObject):
         """Play next track in playlist"""
         try:
             if not self._current_playlist:
-                self._current_playlist = self.get_media_files()
+                self._current_playlist = sorted(self.get_media_files(), key=lambda x: re.sub(r'[^\w\s]|_', '', x.lower()))
                 
             if not self._current_playlist:
                 print("No media files available")
@@ -545,7 +543,7 @@ class MediaManager(QObject):
         """Play previous track in playlist"""
         try:
             if not self._current_playlist:
-                self._current_playlist = self.get_media_files()
+                self._current_playlist = sorted(self.get_media_files(), key=lambda x: re.sub(r'[^\w\s]|_', '', x.lower()))
                 
             if not self._current_playlist:
                 print("No media files available")
@@ -571,16 +569,14 @@ class MediaManager(QObject):
         
     @Slot()
     def toggle_play(self):
-        """Toggle between play and pause"""
         # Handle case when no source is set
         if not self._player.source().isValid():
-            files = self.get_media_files()
-            if files:
-                self._current_index = 0
-                self.play_file(files[0])
+            current_file = self.get_current_file() 
+            if current_file:
+                self.play_file(current_file)
                 return
-                
-        # Toggle play/pause state
+        
+        # Rest of method remains the same
         if self._is_playing:
             self._player.pause()
             self._is_paused = True
@@ -697,7 +693,7 @@ class MediaManager(QObject):
             print(f"Shuffle enabled, starting from: {current_song}")
         else:
             # Get alphabetical list
-            alphabetical = sorted(files)
+            alphabetical = sorted(files, key=lambda x: re.sub(r'[^\w\s]|_', '', x.lower()))
             
             # Find current song in alphabetical order
             if current_song and current_song in alphabetical:
@@ -734,7 +730,7 @@ class MediaManager(QObject):
             self._metadata_cache = {}
             self._album_art_cache = {}
             self._access_count = {}
-            self.invalidate_stats_cache()  # Add this line
+            self.invalidate_stats_cache()
             
             # Refresh media files
             self.get_media_files()
@@ -882,6 +878,10 @@ class MediaManager(QObject):
         if not self._stats_cache["is_valid"]:
             self._calculate_all_stats()
         return self._stats_cache["artist_count"]
+    
+    def _clean_for_sort(self, filename):
+        """Helper function to create consistent sort keys"""
+        return re.sub(r'[^\w\s]|_', '', filename.lower())
 
     @Slot(str, bool, result=list)
     def sort_media_files(self, sort_column, ascending=True):

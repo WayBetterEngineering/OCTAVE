@@ -869,7 +869,7 @@ Item {
                     
                     ScrollView { // Device Settings Page
                         contentWidth: parent.width
-                        ScrollBar.vertical.policy: ScrollBar.AsNeeded
+                        ScrollBar.vertical.policy: ScrollBar.AlwaysOn
                         clip: true
                         
                         ColumnLayout {
@@ -907,7 +907,7 @@ Item {
                     
                     ScrollView { // Media Settings Page
                         contentWidth: parent.width
-                        ScrollBar.vertical.policy: ScrollBar.AsNeeded
+                        ScrollBar.vertical.policy: ScrollBar.AlwaysOn
                         clip: true
                         
                         ColumnLayout {
@@ -1310,7 +1310,7 @@ Item {
                     
                     ScrollView { // Display Settings Page
                         contentWidth: parent.width
-                        ScrollBar.vertical.policy: ScrollBar.AsNeeded
+                        ScrollBar.vertical.policy: ScrollBar.AlwaysOn
                         clip: true
                         
                         ColumnLayout {
@@ -2888,7 +2888,7 @@ Item {
                     
                     ScrollView { // OBD Settings Page
                         contentWidth: parent.width
-                        ScrollBar.vertical.policy: ScrollBar.AsNeeded
+                        ScrollBar.vertical.policy: ScrollBar.AlwaysOn
                         clip: true
                         
                         ColumnLayout {
@@ -3687,7 +3687,7 @@ Item {
 
                     ScrollView { // Clock Settings Page
                         contentWidth: parent.width
-                        ScrollBar.vertical.policy: ScrollBar.AsNeeded
+                        ScrollBar.vertical.policy: ScrollBar.AlwaysOn
                         clip: true
                         
                         ColumnLayout {
@@ -3781,7 +3781,7 @@ Item {
 
                     ScrollView { // About Page
                         contentWidth: parent.width
-                        ScrollBar.vertical.policy: ScrollBar.AsNeeded
+                        ScrollBar.vertical.policy: ScrollBar.AlwaysOn
                         clip: true
                         
                         ColumnLayout {
