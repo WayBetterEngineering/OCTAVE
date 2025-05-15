@@ -146,10 +146,7 @@ class MediaManager(QObject):
                 
                 # Connect to playback state changes to control audio processor
                 self.playStateChanged.connect(self._handle_playback_state_for_equalizer)
-                
-                print("Connected equalizer with audio processing capabilities")
-            else:
-                print("Connected equalizer (visual only)")
+        
         except Exception as e:
             print(f"Error connecting equalizer: {e}")
     
@@ -340,8 +337,6 @@ class MediaManager(QObject):
                 if emit_signal:
                     self.mediaListChanged.emit(mp3_files)
                 
-                # Debug output
-                print(f"Found {len(mp3_files)} MP3 files in {self.media_dir}")
         except Exception as e:
             print(f"Error getting media files: {e}")
                 
@@ -734,7 +729,6 @@ class MediaManager(QObject):
         if os.path.exists(directory) and os.path.isdir(directory):
             old_dir = self.media_dir
             self.media_dir = directory
-            print(f"Media directory changed from {old_dir} to {self.media_dir}")
             
             # Clear caches that depend on the previous directory
             self._metadata_cache = {}
@@ -768,7 +762,6 @@ class MediaManager(QObject):
             if os.path.exists(directory) and os.path.isdir(directory):
                 old_dir = self.media_dir
                 self.media_dir = directory
-                print(f"Media directory changed from {old_dir} to {self.media_dir}")
                 
                 # Clear caches that depend on the previous directory
                 self._metadata_cache = {}
@@ -847,8 +840,6 @@ class MediaManager(QObject):
             self.totalDurationChanged.emit(self._stats_cache["total_duration_formatted"])
             self.albumCountChanged.emit(self._stats_cache["album_count"])
             self.artistCountChanged.emit(self._stats_cache["artist_count"])
-            
-            print(f"Statistics calculated: {len(files)} songs, {len(albums)} albums, {len(artists)} artists, {self._stats_cache['total_duration_formatted']} total duration")
         
         except Exception as e:
             print(f"Error calculating statistics: {e}")

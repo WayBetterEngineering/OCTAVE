@@ -88,31 +88,9 @@ Item {
 
             RowLayout {
                 anchors.fill: parent
-                anchors.leftMargin: App.Spacing.overallMargin * 2
-                anchors.rightMargin: App.Spacing.overallMargin * 2
-                spacing: App.Spacing.overallMargin * 2
-
-                // Back button
-                Rectangle {
-                    Layout.preferredWidth: height
-                    Layout.fillHeight: true
-                    color: "transparent"
-                    
-                    Image {
-                        anchors.centerIn: parent
-                        width: parent.width * 0.6
-                        height: width
-                        source: "./assets/back_icon.png"
-                        fillMode: Image.PreserveAspectFit
-                    }
-                    
-                    MouseArea {
-                        anchors.fill: parent
-                        onClicked: {
-                            stackView.pop()
-                        }
-                    }
-                }
+                anchors.leftMargin: App.Spacing.overallMargin * 4
+                anchors.rightMargin: App.Spacing.overallMargin * 4
+                spacing: App.Spacing.overallMargin * 4
                 
                 // Library title
                 Text {
@@ -195,11 +173,6 @@ Item {
                     }
                 }
 
-                // Spacer
-                Item {
-                    Layout.fillWidth: true
-                }
-                
                 // Total Duration
                 RowLayout {
                     spacing: App.Spacing.overallMargin
@@ -216,6 +189,12 @@ Item {
                         font.bold: true
                     }
                 }
+                
+                // Spacer
+                Item {
+                    Layout.fillWidth: true
+                }
+                
             }
         }
 
@@ -676,16 +655,16 @@ Item {
                         }
                     }
 
-                    // Scrollbar - made wider for touch screens
                     ScrollBar.vertical: ScrollBar {
                         id: verticalScrollBar
                         active: true
-                        width: 12
-                        contentItem: Rectangle {
-                            implicitWidth: 12
-                            radius: width / 2
-                            color: App.Style.accent
+                        policy: ScrollBar.AsNeeded
+                        
+                        Component.onCompleted: {
+                            background.implicitWidth = 12
                         }
+                    
+                        palette.mid: App.Style.accent
                     }
                 }
             }

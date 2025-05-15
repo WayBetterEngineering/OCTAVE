@@ -281,13 +281,11 @@ class SettingsManager(QObject):
         
     @Slot(int)
     def save_screen_width(self, width):
-        print(f"Saving screen width: {width}")
         self._screen_width = width
         self.update_setting("screenWidth", width, self.screenWidthChanged)
         
     @Slot(int)
     def save_screen_height(self, height):
-        print(f"Saving screen height: {height}")
         self._screen_height = height
         self.update_setting("screenHeight", height, self.screenHeightChanged)
     

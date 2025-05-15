@@ -98,7 +98,6 @@ Item {
                                 samples: Math.min(32, Math.max(1, radius))  // Adjust samples based on radius
                                 deviation: radius / 2.5
                                 transparentBorder: false
-                                cached: true  // Add caching for better performance
                             }
                         }
                     }

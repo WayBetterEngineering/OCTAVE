@@ -6,9 +6,9 @@
     "showClock": true,
     "clockSize": 38,
     "backgroundGrid": "Normal",
-    "screenWidth": 1157,
-    "screenHeight": 382,
-    "backgroundBlurRadius": 15,
+    "screenWidth": 1707,
+    "screenHeight": 889,
+    "backgroundBlurRadius": 20,
     "uiScale": 0.65,
     "obdParameters": {
         "COOLANT_TEMP": true,

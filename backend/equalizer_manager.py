@@ -277,7 +277,6 @@ class EqualizerManager(QObject):
             self.equalizerBandsChanged.emit(self._equalizer_values)
             self.presetChanged.emit(preset_name)
             
-            print(f"Applied equalizer preset: {preset_name}")
         except Exception as e:
             print(f"Error applying preset: {e}")
     
